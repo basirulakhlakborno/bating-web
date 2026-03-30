@@ -1,4 +1,4 @@
-<div class="col col-12 login_panel px-5">
+<div class="col col-12 login_panel auth-panel-outer">
     <div class="row hidden-md-and-up" style="margin: unset;">
         <div class="mobile-header text-center col col-12">
             প্রবেশ করুন BABU88
@@ -14,8 +14,9 @@
     </div>
     <div class="row justify-center mt-2 mb-6">
         <div class="col-md-4 col-12 login-form-bg pt-0 mb-12">
-            <form action="#" method="post" novalidate="novalidate" class="v-form ma-8 login-form-page">
+            <form action="{{ route('login') }}" method="post" novalidate="novalidate" class="v-form login-form-page auth-form-vform">
                 @csrf
+                <div id="login-ajax-errors" class="auth-ajax-errors red--text subtitle-2 text-center col col-12 py-2" role="alert" hidden style="display: none;"></div>
                 <div class="row justify-center">
                     <div class="col col-12">
                         <div>
@@ -95,9 +96,6 @@
                                     <span class="v-btn__content">লগইন করুন</span>
                                 </button>
                             </div>
-                            <div class="text-center col col-12">
-                                <label class="red--text subtitle-2" style="display: none;"></label>
-                            </div>
                         </div>
                     </div>
                     <div class="col col-12">
@@ -106,9 +104,6 @@
                                 <button type="submit" class="login-submit-btn primary-button theme-button text-capitalize pa-2 font-weight-bold yellow--text v-btn v-btn--has-bg theme--light v-size--default black mobile-login-btn" style="height: auto;">
                                     <span class="v-btn__content">লগইন করুন</span>
                                 </button>
-                            </div>
-                            <div class="text-center col col-12">
-                                <label class="red--text subtitle-2" style="display: none;"></label>
                             </div>
                         </div>
                     </div>
@@ -150,7 +145,7 @@
                     <div class="col col-12">
                         <div class="row pb-10 hidden-md-and-up no-gutters">
                             <div class="col col-12">
-                                <a href="{{ url('/register') }}" class="full-width font-weight-bold pa-2 dialog-button v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--default buttonPrimary theme-button theme--light subtitle-1 text-decoration-none d-block text-center">
+                                <a href="{{ url('/register') }}" class="auth-to-register-cta full-width font-weight-bold pa-2 dialog-button v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--default theme-button subtitle-1 text-decoration-none d-block text-center">
                                     <span class="v-btn__content">সাইন আপ করুন</span>
                                 </a>
                             </div>

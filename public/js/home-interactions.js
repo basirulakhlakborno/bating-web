@@ -278,16 +278,7 @@
     });
   });
 
-  // ── SEO Read More Toggle ──
-  var readMore = document.querySelector('.readMore');
-  if (readMore) {
-    var seoSection = document.querySelector('.second_footer');
-    readMore.addEventListener('click', function () {
-      if (seoSection) {
-        seoSection.style.display = seoSection.style.display === 'none' ? '' : 'none';
-      }
-    });
-  }
+  // Footer read-more runs from layouts/babu88.blade.php (all pages).
 
   // ── Cricket Highlights Horizontal Scroll ──
   var matchesBox = document.querySelector('.matches-box');

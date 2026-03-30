@@ -32,17 +32,23 @@
 
 @push('scripts')
 <script src="/js/home-interactions.js"></script>
+@include('partials.auth.auth-ajax-submit')
 <script>
 (function () {
     var pwd = document.getElementById('login-password');
     var toggle = document.querySelector('.login-password-toggle');
-    if (!pwd || !toggle) return;
-    toggle.addEventListener('click', function () {
-        var show = pwd.getAttribute('type') === 'password';
-        pwd.setAttribute('type', show ? 'text' : 'password');
-        toggle.classList.toggle('mdi-eye', !show);
-        toggle.classList.toggle('mdi-eye-off', show);
-        toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    if (pwd && toggle) {
+        toggle.addEventListener('click', function () {
+            var show = pwd.getAttribute('type') === 'password';
+            pwd.setAttribute('type', show ? 'text' : 'password');
+            toggle.classList.toggle('mdi-eye', !show);
+            toggle.classList.toggle('mdi-eye-off', show);
+            toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+        });
+    }
+    initAuthAjaxForm('.login-form-page', {
+        errorId: 'login-ajax-errors',
+        successMessage: 'সফলভাবে লগইন হয়েছে।'
     });
 })();
 </script>

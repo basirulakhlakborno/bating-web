@@ -32,6 +32,7 @@
 
 @push('scripts')
 <script src="/js/home-interactions.js"></script>
+@include('partials.auth.auth-ajax-submit')
 <script>
 (function () {
     function bindPasswordToggle(toggle, inputId) {
@@ -48,30 +49,89 @@
     bindPasswordToggle(document.querySelector('[data-register-pw-toggle="reg-pass"]'), 'register-password');
     bindPasswordToggle(document.querySelector('[data-register-pw-toggle="reg-pass2"]'), 'register-password-confirm');
 
-    function drawCaptcha() {
-        var canvas = document.getElementById('register-captcha-canvas');
-        if (!canvas || !canvas.getContext) return;
-        var ctx = canvas.getContext('2d');
-        var code = '';
-        var chars = 'ABCDEFGHJKLMNPQRSTUVW23456789';
-        for (var i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-        canvas.dataset.expectedCode = code;
-        ctx.fillStyle = '#eeeeee';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        for (var j = 0; j < 6; j++) {
-            ctx.strokeStyle = 'rgba(0,0,0,' + (0.08 + Math.random() * 0.12) + ')';
-            ctx.beginPath();
-            ctx.moveTo(Math.random() * 68, Math.random() * 40);
-            ctx.lineTo(Math.random() * 68, Math.random() * 40);
-            ctx.stroke();
-        }
-        ctx.fillStyle = '#1a1a1a';
-        ctx.font = 'bold 18px monospace';
-        ctx.fillText(code, 10, 27);
+    function refreshRegisterCaptcha() {
+        var img = document.getElementById('register-captcha-img');
+        if (!img) return;
+        var base = img.getAttribute('data-captcha-url') || img.src.split('?')[0];
+        img.src = base + (base.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
     }
-    drawCaptcha();
-    var refresh = document.getElementById('register-captcha-refresh');
-    if (refresh) refresh.addEventListener('click', function (e) { e.preventDefault(); drawCaptcha(); });
+    window.refreshRegisterCaptcha = refreshRegisterCaptcha;
+
+    var captchaRefresh = document.getElementById('register-captcha-refresh');
+    if (captchaRefresh) {
+        captchaRefresh.addEventListener('click', function (e) {
+            e.preventDefault();
+            refreshRegisterCaptcha();
+            var input = document.getElementById('register-captcha-input');
+            if (input) input.value = '';
+        });
+    }
+
+    (function initRegisterCurrency() {
+        var root = document.querySelector('[data-register-currency]');
+        if (!root) return;
+        var trigger = root.querySelector('.register-currency-trigger');
+        var menu = root.querySelector('[data-register-currency-menu]');
+        var hidden = root.querySelector('.register-currency-hidden');
+        var flagImg = root.querySelector('.register-currency-trigger-flag');
+        var textEl = root.querySelector('.register-currency-trigger-text');
+        if (!trigger || !menu || !hidden || !flagImg || !textEl) return;
+        function setOpen(open) {
+            menu.hidden = !open;
+            trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+        trigger.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            setOpen(menu.hidden);
+        });
+        trigger.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setOpen(menu.hidden);
+            }
+            if (e.key === 'Escape') setOpen(false);
+        });
+        menu.querySelectorAll('.register-currency-option').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                hidden.value = btn.getAttribute('data-currency-code') || '';
+                flagImg.src = btn.getAttribute('data-currency-flag') || '';
+                textEl.textContent = btn.getAttribute('data-currency-label') || '';
+                setOpen(false);
+            });
+        });
+        document.addEventListener('click', function (e) {
+            if (!root.contains(e.target)) setOpen(false);
+        });
+    })();
+
+    (function initRegisterTermsCheckbox() {
+        var cb = document.getElementById('register-terms');
+        var icon = document.querySelector('.register-terms-checkbox-icon');
+        if (!cb || !icon) return;
+        function syncTermsCheckboxVisual() {
+            var on = cb.checked;
+            if (on) {
+                icon.classList.remove('mdi-checkbox-blank-outline');
+                icon.classList.add('mdi-checkbox-marked');
+            } else {
+                icon.classList.add('mdi-checkbox-blank-outline');
+                icon.classList.remove('mdi-checkbox-marked');
+            }
+            icon.classList.toggle('primary--text', on);
+            cb.setAttribute('aria-checked', on ? 'true' : 'false');
+        }
+        cb.addEventListener('change', syncTermsCheckboxVisual);
+        syncTermsCheckboxVisual();
+    })();
+
+    initAuthAjaxForm('.register-form-page', {
+        errorId: 'register-ajax-errors',
+        successMessage: 'নিবন্ধন সম্পন্ন। স্বাগতম!',
+        afterError: function () {
+            refreshRegisterCaptcha();
+        }
+    });
 })();
 </script>
 @endpush

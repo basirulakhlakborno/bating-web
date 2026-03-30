@@ -20,7 +20,13 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
+        'phone',
+        'currency_code',
+        'locale',
+        'role',
+        'balance',
         'password',
     ];
 
@@ -44,6 +50,27 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'balance' => 'decimal:2',
         ];
+    }
+
+    public function displayUsername(): string
+    {
+        return (string) ($this->username ?: $this->name);
+    }
+
+    public function currencySymbol(): string
+    {
+        return match (strtoupper((string) $this->currency_code)) {
+            'INR' => '₹',
+            'PKR' => '₨',
+            'NPR' => 'Rs',
+            default => '৳',
+        };
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 }

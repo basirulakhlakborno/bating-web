@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\SiteLayoutData;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::composer(
+            [
+                'components.desktop-nav',
+                'components.navigation-drawer',
+                'components.footer',
+                'home',
+            ],
+            function ($view): void {
+                static $payload = null;
+                $payload ??= SiteLayoutData::shared();
+                $view->with($payload);
+            }
+        );
     }
 }

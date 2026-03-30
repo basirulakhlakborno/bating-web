@@ -114,4 +114,12 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Synthetic email domain for username-only registration
+    |--------------------------------------------------------------------------
+    */
+
+    'player_email_domain' => env('PLAYER_EMAIL_DOMAIN', 'players.local'),
+
 ];

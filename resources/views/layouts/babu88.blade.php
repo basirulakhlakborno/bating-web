@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="title" content="{{ $metaTitle ?? 'Babu88 | Your preferred Cricket Exchange | Get your Free ID today' }}">
     <meta name="description" content="{{ $metaDescription ?? 'Register and experience the best Cricket Exchange in Bangladesh with 24/7 Service.' }}">
     <meta name="keywords" content="{{ $metaKeywords ?? 'cricket exchange, best cricket exchange, cricket betting' }}">
@@ -158,6 +159,25 @@
         .download-bar-button .v-btn__content {
             color: #1a1a1a;
         }
+        .footer-read-more-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font: inherit;
+            color: inherit;
+            padding: 6px 12px;
+        }
+        .footer-read-more-btn:hover {
+            opacity: 0.9;
+        }
+        .footer-read-more-btn:focus {
+            outline: none;
+        }
+        .footer-read-more-btn:focus-visible {
+            outline: 2px solid rgba(255, 255, 255, 0.5);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
     </style>
     @stack('styles')
 </head>
@@ -165,7 +185,22 @@
     <main>
         @yield('content')
     </main>
+    @include('partials.toast-stack')
     @include('partials.babu88-fonts')
     @stack('scripts')
+    <script>
+    (function () {
+        var btn = document.getElementById('footer-read-more-btn');
+        var panel = document.getElementById('footer-seo-extra');
+        if (!btn || !panel) return;
+        var expanded = false;
+        btn.addEventListener('click', function () {
+            expanded = !expanded;
+            panel.hidden = !expanded;
+            btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            btn.textContent = expanded ? 'কম পড়া' : 'আরও পড়ুন';
+        });
+    })();
+    </script>
 </body>
 </html>
