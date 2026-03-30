@@ -1,0 +1,13 @@
+DirectoryIndex index.php index.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Only skip rewrite for real *files* at project root (e.g. index.php).
+    # Do not use -d here: "/" would match the project folder and skip rewrites,
+    # and "/storage" would expose the app storage path instead of public/storage.
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    # Map /path → public/path (assets, routes, etc.)
+    RewriteRule ^(.+)$ public/$1 [L,QSA]
+</IfModule>

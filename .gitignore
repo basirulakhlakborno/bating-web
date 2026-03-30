@@ -3,15 +3,17 @@
 .env
 .env.backup
 .env.production
+.env.local
 .phpactor.json
 .phpunit.result.cache
+.phpstan
+.auth.json
 /.fleet
 /.idea
 /.nova
 /.phpunit.cache
 /.vscode
 /.zed
-/auth.json
 /node_modules
 /public/build
 /public/hot
@@ -22,3 +24,14 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+Desktop.ini
+npm-debug.log*
+yarn-error.log*
+*.sqlite
+*.sqlite-journal
+
+# XAMPP: duplicate static mirror at repo root; assets live in /public/static
+/static
+
+# Laravel Boost / tooling (optional local)
+/bootstrap/ssr
