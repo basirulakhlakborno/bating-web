@@ -1,0 +1,4 @@
+/* Global tweaks; Vuetify chunks in index.html; shell rules in src/styles/babu88-shell.css (imported from main.tsx). */
+body {
+  margin: 0;
+}
