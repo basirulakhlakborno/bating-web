@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom'
 import { useCallback, useRef } from 'react'
+import { apiUrl } from '../../config/apiBase'
+import { submitLoginAjax } from '../../lib/authFormFetch'
 
-/** From `partials/auth/login-panel.blade.php` — form posts to Laravel when wired. */
+/** Guest login: always JSON `fetch` to Laravel (`expectsJson`), never a document navigation. */
 export function LoginPanel() {
+  const formRef = useRef<HTMLFormElement>(null)
+  const userRef = useRef<HTMLInputElement>(null)
   const pwdRef = useRef<HTMLInputElement>(null)
   const toggleRef = useRef<HTMLButtonElement>(null)
 
@@ -17,11 +21,23 @@ export function LoginPanel() {
     toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password')
   }, [])
 
+  const onLoginSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const username = userRef.current?.value?.trim() ?? ''
+    const password = pwdRef.current?.value ?? ''
+    void submitLoginAjax({
+      url: apiUrl('/api/login'),
+      username,
+      password,
+      errorId: 'login-ajax-errors',
+      successMessage: 'সফলভাবে লগইন হয়েছে।',
+      formForBusy: formRef.current,
+    })
+  }, [])
+
   return (
     <div className="col col-12 login_panel auth-panel-outer">
-      <div className="row hidden-md-and-up" style={{ margin: 'unset' }}>
-        <div className="mobile-header text-center col col-12">প্রবেশ করুন BABU88</div>
-      </div>
       <div className="row hidden-sm-and-down mt-4" style={{ margin: 'unset' }}>
         <div className="login-header text-center py-0 col col-12">লগইন করুন</div>
         <div className="login-header-desc text-center pt-0 col col-12">স্বাগতম!</div>
@@ -29,11 +45,12 @@ export function LoginPanel() {
       <div className="row justify-center mt-2 mb-6">
         <div className="col-md-4 col-12 login-form-bg pt-0 mb-12">
           <form
-            action="/login"
+            ref={formRef}
+            action="#"
             method="post"
             noValidate
             className="v-form login-form-page auth-form-vform"
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={onLoginSubmit}
           >
             <div
               id="login-ajax-errors"
@@ -68,6 +85,7 @@ export function LoginPanel() {
                             </fieldset>
                             <div className="v-text-field__slot">
                               <input
+                                ref={userRef}
                                 name="username"
                                 autoComplete="username"
                                 id="login-username"

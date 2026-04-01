@@ -23,21 +23,12 @@
     <meta property="og:image" content="/static/image/logo/logo.webp" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image:alt" content="Babu88" />
+    <!-- Filled by Laravel Blade when served from PHP; XSRF-TOKEN cookie used as fallback in dev -->
+    <meta name="csrf-token" content="" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="bookmark" href="/favicon.ico" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Babu88 | Premium Cricket Exchange | Online Live Casino Bangladesh</title>
-    <script>
-      ;(function () {
-        if (typeof window.Intercom === 'function') return
-        var q = []
-        var stub = function () {
-          q.push(arguments)
-        }
-        stub.q = q
-        window.Intercom = stub
-      })()
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Icons" />
@@ -51,6 +42,27 @@
     <link rel="stylesheet" href="/css/toast-stack.css" />
   </head>
   <body>
+    <div
+      id="app-page-loader"
+      class="app-page-loader"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      aria-label="লোড হচ্ছে"
+      style="position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(46,46,46,0.94)"
+    >
+      <div class="app-page-loader__inner">
+        <img
+          class="app-page-loader__logo"
+          src="/static/svg/bb88_logo_animation2.gif"
+          alt=""
+          width="215"
+          height="45"
+          decoding="async"
+        />
+      </div>
+    </div>
+    <script src="/js/page-loader.js"></script>
     <main>
       <div id="root"></div>
     </main>

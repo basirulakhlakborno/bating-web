@@ -1,19 +1,14 @@
 import { ProfileChangePasswordMain } from '../components/profile/ProfileChangePasswordMain'
 import { ProfilePageLayout } from '../components/profile/ProfilePageLayout'
-
-const mockSide = {
-  memberCode: '—',
-  bettingTierLabel: 'স্তর 1',
-  bettingProgress: '0/200.00',
-  vipLabel: 'MEMBER',
-  referralCode: '—',
-  rewardCoins: '0',
-  referralWallet: '৳ 0.00',
-}
+import { useProfileAuth } from '../lib/useProfileAuth'
 
 export function ProfileChangePasswordPage() {
+  const { user, loading, side } = useProfileAuth()
+
+  if (loading || !user || !side) return null
+
   return (
-    <ProfilePageLayout side={mockSide} wideMainColumn>
+    <ProfilePageLayout side={side} wideMainColumn>
       <ProfileChangePasswordMain />
     </ProfilePageLayout>
   )

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { flattenPlayerApiErrors, playerJson, refreshPlayerUser } from '../../lib/playerApi'
 
 function PasswordHelpIcon() {
   return (
@@ -64,6 +65,7 @@ export function ProfileChangePasswordMain() {
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [busy, setBusy] = useState(false)
 
   return (
     <div className="changePassword-wrapper">
@@ -81,8 +83,42 @@ export function ProfileChangePasswordMain() {
           <form
             className="v-form profile-password-form"
             noValidate
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault()
+              if (busy) return
+              if (next.length < 6) {
+                window.showToast?.('নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।', { type: 'error' })
+                return
+              }
+              if (next !== confirm) {
+                window.showToast?.('নতুন পাসওয়ার্ড মিলছে না।', { type: 'error' })
+                return
+              }
+              setBusy(true)
+              window.babu88PushLoading?.()
+              try {
+                const { ok, data } = await playerJson<{ message?: string }>('/api/profile/password', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    current_password: current,
+                    password: next,
+                    password_confirmation: confirm,
+                  }),
+                })
+                if (ok) {
+                  window.showToast?.(data.message || 'পাসওয়ার্ড আপডেট হয়েছে।', { type: 'success' })
+                  setCurrent('')
+                  setNext('')
+                  setConfirm('')
+                  await refreshPlayerUser()
+                } else {
+                  const msg = flattenPlayerApiErrors(data) || 'অনুরোধ সম্পূর্ণ হয়নি।'
+                  window.showToast?.(msg, { type: 'error' })
+                }
+              } finally {
+                setBusy(false)
+                window.babu88PopLoading?.()
+              }
             }}
           >
             <div className="row no-gutters align-end pt-4">
@@ -134,6 +170,8 @@ export function ProfileChangePasswordMain() {
                 </div>
                 <button
                   type="submit"
+                  disabled={busy}
+                  aria-busy={busy}
                   className="dialog-button v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--default pass-btn-desktop pass-width profile-password-submit"
                 >
                   <span className="v-btn__content">জমা দিন</span>

@@ -1,6 +1,8 @@
 export type ProfilePersonalFields = {
   username: string
   currency: string
+  /** Display line for who referred this account; empty if none. */
+  referrerLine: string
   fullName: string
   birthDate: string
   email: string
@@ -66,6 +68,7 @@ export function ProfilePersonalMain({ f }: { f: ProfilePersonalFields }) {
 
           <div className="profile-detail-card v-card v-sheet theme--light elevation-1">
             <FieldRowDesktop label="ব্যবহারকারীর নাম" value={f.username} pb="pb-5" />
+            <FieldRowDesktop label="রেফারার" value={f.referrerLine || '—'} empty={!f.referrerLine} />
             <FieldRowDesktop label="জন্ম তারিখ" value={f.birthDate} empty={!f.birthDate} />
             <FieldRowDesktop label="পুরো নাম" value={f.fullName} empty={!f.fullName} />
             <div className="row hidden-sm-and-down mb-4 no-gutters align-end profile-field-row">
@@ -133,6 +136,14 @@ export function ProfilePersonalMain({ f }: { f: ProfilePersonalFields }) {
                     <label className="field-name-desktop-desktop">{f.currency}</label>
                   </div>
                 </div>
+              </div>
+            </div>
+            <div className="row px-3 px-sm-4 pa-2 hidden-md-and-up no-gutters align-end profile-mobile-field-gap">
+              <div className="pb-2 col col-12">
+                <label className="field-name-desktop">রেফারার</label>
+              </div>
+              <div className="pa-2 filled-label col col-12">
+                <label className="profile-field-value">{f.referrerLine || '—'}</label>
               </div>
             </div>
             <div className="row px-3 px-sm-4 pa-2 hidden-md-and-up no-gutters align-end profile-mobile-section-gap">

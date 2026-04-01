@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { navPageEntries } from '../config/navPages'
+import { openIntercomMessenger } from '../lib/intercom'
 
 type Props = {
   open: boolean
@@ -107,20 +108,39 @@ export function NavigationDrawer({ open, onClose, onLanguageClick }: Props) {
                 <div className="v-list-item__title">ভাষা</div>
               </div>
             </div>
-            <div tabIndex={0} role="option" aria-selected="false" className="v-list-item v-list-item--link theme--light">
+            <button
+              type="button"
+              role="option"
+              aria-selected="false"
+              className="v-list-item v-list-item--link theme--light"
+              style={{
+                width: '100%',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                textAlign: 'left',
+                padding: 0,
+                font: 'inherit',
+                color: 'inherit',
+              }}
+              onClick={() => {
+                onClose()
+                void openIntercomMessenger()
+              }}
+            >
               <div className="v-list-item__icon">
-                <button type="button" className="v-btn v-btn--icon v-btn--round theme--light v-size--small" style={{ marginLeft: -3 }}>
+                <span className="v-btn v-btn--icon v-btn--round theme--light v-size--small" style={{ marginLeft: -3, display: 'inline-flex', pointerEvents: 'none' }}>
                   <span className="v-btn__content">
                     <div className="v-avatar" style={{ height: 25, minWidth: 25, width: 25 }}>
                       <img src="/static/svg/mobileMenu/liveChat.svg" alt="" />
                     </div>
                   </span>
-                </button>
+                </span>
               </div>
               <div className="v-list-item__content">
                 <div className="v-list-item__title">সরাসরি কথোপকথন</div>
               </div>
-            </div>
+            </button>
             <div tabIndex={0} role="option" aria-selected="false" className="v-list-item v-list-item--link theme--light">
               <div className="v-list-item__icon">
                 <button type="button" className="v-btn v-btn--icon v-btn--round theme--light v-size--small" style={{ marginLeft: -3 }}>

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { type FormEvent, useState } from 'react'
+import { flattenPlayerApiErrors, playerJson, refreshPlayerUser } from '../../lib/playerApi'
 
 const staticSvg = (name: string) => `https://babu88.gold/static/svg/${name}`
 
@@ -56,15 +57,56 @@ function HelpIcon() {
   )
 }
 
-export function BankDepositMain() {
+export function BankDepositMain({ onDepositSuccess }: { onDepositSuccess?: () => void | Promise<void> }) {
   const [ewallet, setEwallet] = useState<(typeof EWALLETS)[number]['id']>('NAGAD')
   const [channel, setChannel] = useState<(typeof CHANNELS)[number]['id']>('ZAPPAY')
   const [amount, setAmount] = useState('')
   const [preset, setPreset] = useState<number>(200)
+  const [submitting, setSubmitting] = useState(false)
 
   const setAmountFromPreset = (n: number) => {
     setPreset(n)
     setAmount(String(n))
+  }
+
+  const submitDeposit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (submitting) return
+    const raw = amount.replace(/[^\d.]/g, '')
+    const num = parseFloat(raw)
+    if (!Number.isFinite(num) || num < 200) {
+      window.showToast?.('ন্যূনতম ৳ 200.00 প্রয়োজন।', { type: 'error' })
+      return
+    }
+    if (num > 30000) {
+      window.showToast?.('সর্বোচ্চ ৳ 30,000.00।', { type: 'error' })
+      return
+    }
+    const reference = `dep-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
+    setSubmitting(true)
+    window.babu88PushLoading?.()
+    try {
+      const { ok, data } = await playerJson<{ message?: string }>('/api/deposit', {
+        method: 'POST',
+        body: JSON.stringify({
+          amount: num.toFixed(2),
+          currency_code: 'BDT',
+          reference,
+          meta: { ewallet, channel },
+        }),
+      })
+      if (ok) {
+        window.showToast?.((data as { message?: string }).message || 'আমানত নিশ্চিত হয়েছে।', { type: 'success' })
+        await refreshPlayerUser()
+        await onDepositSuccess?.()
+      } else {
+        const msg = flattenPlayerApiErrors(data as { message?: string; errors?: Record<string, string[]> }) || 'অনুরোধ সম্পূর্ণ হয়নি।'
+        window.showToast?.(msg, { type: 'error' })
+      }
+    } finally {
+      setSubmitting(false)
+      window.babu88PopLoading?.()
+    }
   }
 
   return (
@@ -108,13 +150,7 @@ export function BankDepositMain() {
             </div>
           </div>
 
-          <form
-            className="v-form depo-main-form"
-            noValidate
-            onSubmit={(e) => {
-              e.preventDefault()
-            }}
-          >
+          <form className="v-form depo-main-form" noValidate onSubmit={submitDeposit}>
             <div className="row pb-2 breakpoint no-gutters align-end">
               <div className="col-md-12 col">
                 <label className="input-field-label ma-0 text-capitalize d-block">
@@ -226,6 +262,8 @@ export function BankDepositMain() {
               <div className="col-md-6 col">
                 <button
                   type="submit"
+                  disabled={submitting}
+                  aria-busy={submitting}
                   className="dialog-button theme-button depo-width v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--default deposit-btn-desktop"
                 >
                   <span className="v-btn__content">আমানত</span>

@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useCallback, useId, useRef, useState } from 'react'
 import { apiUrl } from '../../config/apiBase'
+import { submitAuthForm } from '../../lib/authFormFetch'
 
 const registerCurrencies = [
   { code: 'BDT', label: '৳ BDT', flag: 'BDT.svg' },
@@ -11,6 +12,8 @@ const registerCurrencies = [
 
 /** Full `partials/auth/register-panel.blade.php` — POST uses `apiUrl()` from `VITE_API_BASE_URL`. */
 export function RegisterPanel() {
+  const [searchParams] = useSearchParams()
+  const refFromUrl = searchParams.get('ref') ?? ''
   const idPrefix = useId()
   const currencyLabelId = `${idPrefix}-currency-label`
   const pwdRef = useRef<HTMLInputElement>(null)
@@ -82,7 +85,20 @@ export function RegisterPanel() {
             </div>
           </div>
 
-          <form action={formAction} method="post" noValidate className="v-form register-form-page auth-form-vform">
+          <form
+            action={formAction}
+            method="post"
+            noValidate
+            className="v-form register-form-page auth-form-vform"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void submitAuthForm(e.currentTarget, {
+                errorId: 'register-ajax-errors',
+                successMessage: 'নিবন্ধন সম্পন্ন। স্বাগতম!',
+                afterError: () => setCaptchaTs(Date.now()),
+              })
+            }}
+          >
             <input type="hidden" name="_token" value="" />
             <div
               id="register-ajax-errors"
@@ -116,6 +132,48 @@ export function RegisterPanel() {
                             </fieldset>
                             <div className="v-text-field__slot">
                               <input name="username" id="register-username" autoComplete="username" placeholder="এখানে পূরণ করুন" type="text" required />
+                            </div>
+                          </div>
+                          <div className="v-text-field__details">
+                            <div className="v-messages theme--light">
+                              <div className="v-messages__wrapper"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col col-12">
+                <div className="v-card__text ma-0 pa-0">
+                  <div className="row no-gutters justify-space-between">
+                    <div className="col col-10">
+                      <label className="input-field-label ma-0 text-capitalize d-block pb-2" style={{ float: 'left' }} htmlFor="register-referral-code">
+                        রেফারেল কোড <span className="body-2 font-weight-regular">(ঐচ্ছিক)</span>
+                      </label>
+                    </div>
+                    <div className="col col-2"></div>
+                    <div className="col col-12">
+                      <div className="v-input input-field elevation-0 hide-details theme--light v-text-field v-text-field--is-booted v-text-field--enclosed v-text-field--outlined v-text-field--placeholder">
+                        <div className="v-input__control">
+                          <div className="v-input__slot">
+                            <fieldset aria-hidden="true">
+                              <legend style={{ width: 0 }}>
+                                <span className="notranslate">​</span>
+                              </legend>
+                            </fieldset>
+                            <div className="v-text-field__slot">
+                              <input
+                                name="referral_code"
+                                id="register-referral-code"
+                                type="text"
+                                autoComplete="off"
+                                placeholder="আমন্ত্রণকারীর ব্যবহারকারীর নাম"
+                                defaultValue={refFromUrl}
+                                maxLength={64}
+                              />
                             </div>
                           </div>
                           <div className="v-text-field__details">
@@ -421,42 +479,6 @@ export function RegisterPanel() {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="col col-12">
-                <hr role="separator" aria-orientation="horizontal" className="v-divider theme--light" />
-              </div>
-
-              <div className="col col-12">
-                <details className="register-referral-details">
-                  <summary className="register-referral-summary input-field-label ma-0 d-flex align-center justify-space-between">
-                    <span>রেফারেল কোড</span>
-                    <i aria-hidden="true" className="v-icon notranslate mdi mdi-chevron-down theme--light register-referral-chevron"></i>
-                  </summary>
-                  <div className="register-referral-panel">
-                    <div className="register-referral-panel-inner pt-2 pb-2">
-                      <div className="v-input input-field elevation-0 hide-details theme--light v-text-field v-text-field--is-booted v-text-field--enclosed v-text-field--outlined v-text-field--placeholder">
-                        <div className="v-input__control">
-                          <div className="v-input__slot">
-                            <fieldset aria-hidden="true">
-                              <legend style={{ width: 0 }}>
-                                <span className="notranslate">​</span>
-                              </legend>
-                            </fieldset>
-                            <div className="v-text-field__slot">
-                              <input name="referral" id="register-referral" placeholder="(চ্ছিক)" type="text" />
-                            </div>
-                          </div>
-                          <div className="v-text-field__details">
-                            <div className="v-messages theme--light">
-                              <div className="v-messages__wrapper"></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </details>
               </div>
 
               <div className="col col-12">

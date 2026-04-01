@@ -5,11 +5,47 @@ import {
   homeMobileBannerSlides,
 } from '../../data/homeBannerMedia'
 
-function MarqueeContent() {
+function BannerChevron({ direction, size }: { direction: 'left' | 'right'; size: number }) {
+  const d = direction === 'left' ? 'M15 6 9 12l6 6' : 'M9 6l6 6-6 6'
+  return (
+    <svg
+      className="home-banner-chevron"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d={d} />
+    </svg>
+  )
+}
+
+function BannerCarouselDash({ size }: { size: number }) {
+  return (
+    <svg
+      className="home-banner-carousel-dash"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden
+    >
+      <rect x="5" y="11" width="14" height="2" rx="1" fill="currentColor" />
+    </svg>
+  )
+}
+
+function MarqueeSegment({ idPrefix }: { idPrefix: 'a' | 'b' }) {
   return (
     <>
       {homeMarqueeBlocks.map((b, i) => (
-        <span key={i} className="pr-6 mr-6">
+        <span key={`${idPrefix}-${i}`} className="marquee-block-item">
           <label className="d-inline-block home-announcment-content" style={{ color: 'rgb(255, 206, 1)' }}>
             {b.accent}
           </label>
@@ -17,6 +53,21 @@ function MarqueeContent() {
         </span>
       ))}
     </>
+  )
+}
+
+function MarqueeLoop() {
+  return (
+    <div className="marquee">
+      <div className="marquee-track">
+        <div className="marquee-segment">
+          <MarqueeSegment idPrefix="a" />
+        </div>
+        <div className="marquee-segment" aria-hidden="true">
+          <MarqueeSegment idPrefix="b" />
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -59,7 +110,7 @@ export function HomeBanner() {
                   onClick={() => setMob((m) => (m - 1 + mobN) % mobN)}
                 >
                   <span className="v-btn__content">
-                    <i aria-hidden="true" className="v-icon notranslate mdi mdi-chevron-left theme--dark" style={{ fontSize: 36 }}></i>
+                    <BannerChevron direction="left" size={36} />
                   </span>
                 </button>
               </div>
@@ -71,7 +122,7 @@ export function HomeBanner() {
                   onClick={() => setMob((m) => (m + 1) % mobN)}
                 >
                   <span className="v-btn__content">
-                    <i aria-hidden="true" className="v-icon notranslate mdi mdi-chevron-right theme--dark" style={{ fontSize: 36 }}></i>
+                    <BannerChevron direction="right" size={36} />
                   </span>
                 </button>
               </div>
@@ -110,7 +161,7 @@ export function HomeBanner() {
                   onClick={() => setDesk(i)}
                 >
                   <span className="v-btn__content">
-                    <i aria-hidden="true" className="v-icon notranslate mdi mdi-minus theme--dark" style={{ fontSize: 18 }}></i>
+                    <BannerCarouselDash size={18} />
                   </span>
                 </button>
               ))}
@@ -120,50 +171,43 @@ export function HomeBanner() {
         <button
           type="button"
           className="prev-btn v-btn v-btn--icon v-btn--round theme--light v-size--default"
-          style={{ color: 'rgb(0, 0, 0)' }}
           aria-label="Previous slide"
           onClick={() => setDesk((d) => (d - 1 + deskN) % deskN)}
         >
           <span className="v-btn__content">
-            <i aria-hidden="true" className="v-icon notranslate mdi mdi-chevron-left theme--light"></i>
+            <BannerChevron direction="left" size={28} />
           </span>
         </button>
         <button
           type="button"
           className="next-btn v-btn v-btn--icon v-btn--round theme--light v-size--default"
-          style={{ color: 'rgb(0, 0, 0)' }}
           aria-label="Next slide"
           onClick={() => setDesk((d) => (d + 1) % deskN)}
         >
           <span className="v-btn__content">
-            <i aria-hidden="true" className="v-icon notranslate mdi mdi-chevron-right theme--light"></i>
+            <BannerChevron direction="right" size={28} />
           </span>
         </button>
       </div>
 
       <div className="marquee-row hidden-md-and-up">
         <div className="marquee-wrapper">
-          <div className="marquee">
-            <div className="marquee-content">
-              <MarqueeContent />
-            </div>
-          </div>
+          <MarqueeLoop />
         </div>
       </div>
 
       <div className="row marquee-row hidden-sm-and-down no-gutters" style={{ padding: '1% 12%' }}>
         <div className="marquee-wrapper">
-          <div className="marquee">
-            <div className="marquee-content">
-              <MarqueeContent />
-            </div>
-          </div>
+          <MarqueeLoop />
         </div>
       </div>
 
-      <div className="row home-page-create-account-container no-gutters" style={{ margin: '0px 12%' }}>
+      <div className="row home-page-create-account-container home-register-banner no-gutters">
         <div className="v-image v-responsive theme--light">
-          <div className="v-responsive__sizer" style={{ paddingBottom: '12.5%' }}></div>
+          <div
+            className="v-responsive__sizer home-register-banner__sizer"
+            style={{ paddingBottom: '12.5%' }}
+          ></div>
           <div
             className="v-image__image v-image__image--cover"
             style={{
@@ -171,7 +215,7 @@ export function HomeBanner() {
               backgroundPosition: 'center center',
             }}
           ></div>
-          <div className="v-responsive__content" style={{ width: 1920 }}></div>
+          <div className="v-responsive__content home-register-banner__content" />
         </div>
       </div>
 

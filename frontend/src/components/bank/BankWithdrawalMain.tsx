@@ -1,4 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { AuthUser } from '../../lib/authFormFetch'
+import { readAuthUser } from '../../lib/authFormFetch'
+import { flattenPlayerApiErrors, playerJson, refreshPlayerUser } from '../../lib/playerApi'
 
 const staticSvg = (name: string) => `https://babu88.gold/static/svg/${name}`
 const warnIcon = staticSvg('personal-info-warning.svg')
@@ -26,13 +29,41 @@ function HelpIcon() {
   )
 }
 
-export function BankWithdrawalMain() {
+export function BankWithdrawalMain({
+  user,
+  onBalanceRefresh,
+}: {
+  user: AuthUser
+  onBalanceRefresh?: () => void | Promise<void>
+}) {
+  const symbol = user.currency_symbol || '৳'
   const [method, setMethod] = useState<(typeof METHODS)[number]['id']>('BKASH')
-  const [phone, setPhone] = useState('')
+  const [phone, setPhone] = useState(user.phone || '')
   const [amount, setAmount] = useState('')
-  const [balance] = useState('৳ 0.00')
+  const [balance, setBalance] = useState(`${symbol} ${user.balance || '0.00'}`)
+  const [busy, setBusy] = useState(false)
 
-  const submitDisabled = true
+  useEffect(() => {
+    setPhone(user.phone || '')
+  }, [user.phone])
+
+  useEffect(() => {
+    setBalance(`${symbol} ${user.balance || '0.00'}`)
+  }, [user.balance, symbol])
+
+  const submitDisabled = busy || !phone.trim() || !amount.trim()
+
+  const refreshBalance = async () => {
+    window.babu88PushLoading?.()
+    try {
+      await refreshPlayerUser()
+      await onBalanceRefresh?.()
+      const u = readAuthUser()
+      if (u) setBalance(`${u.currency_symbol || symbol} ${u.balance || '0.00'}`)
+    } finally {
+      window.babu88PopLoading?.()
+    }
+  }
 
   return (
     <div className="v-card v-sheet theme--light desktop_withdraw_card bank-withdraw-card">
@@ -44,7 +75,7 @@ export function BankWithdrawalMain() {
         <div className="mobile-balance-div">
           <div>
             <span className="mobile-balance-label">ভারসাম্য</span>
-            <button type="button" className="bank-withdraw-reload-btn" aria-label="রিফ্রেশ">
+            <button type="button" className="bank-withdraw-reload-btn" aria-label="রিফ্রেশ" onClick={() => void refreshBalance()}>
               <ReloadIcon />
             </button>
           </div>
@@ -82,8 +113,48 @@ export function BankWithdrawalMain() {
         <form
           className="v-form bank-withdraw-form"
           noValidate
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault()
+            if (submitDisabled) return
+            const raw = amount.replace(/[^\d.]/g, '')
+            const num = parseFloat(raw)
+            if (!Number.isFinite(num) || num < 500) {
+              window.showToast?.('ন্যূনতম ৳ 500।', { type: 'error' })
+              return
+            }
+            if (num > 30000) {
+              window.showToast?.('সর্বোচ্চ ৳ 30,000।', { type: 'error' })
+              return
+            }
+            const reference = `wd-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
+            setBusy(true)
+            window.babu88PushLoading?.()
+            try {
+              const { ok, data } = await playerJson<{ message?: string; balance?: string }>('/api/bank/withdraw', {
+                method: 'POST',
+                body: JSON.stringify({
+                  amount: num.toFixed(2),
+                  currency_code: user.currency_code || 'BDT',
+                  method,
+                  account_phone: phone.trim(),
+                  reference,
+                }),
+              })
+              if (ok) {
+                window.showToast?.(data.message || 'উত্তোলন সম্পন্ন।', { type: 'success' })
+                setAmount('')
+                await refreshPlayerUser()
+                await onBalanceRefresh?.()
+                const u = readAuthUser()
+                if (u) setBalance(`${u.currency_symbol || symbol} ${u.balance || '0.00'}`)
+              } else {
+                const msg = flattenPlayerApiErrors(data as { message?: string; errors?: Record<string, string[]> }) || 'অনুরোধ সম্পূর্ণ হয়নি।'
+                window.showToast?.(msg, { type: 'error' })
+              }
+            } finally {
+              setBusy(false)
+              window.babu88PopLoading?.()
+            }
           }}
         >
           <div className="row hidden-sm-and-down no-gutters align-end">
@@ -129,16 +200,17 @@ export function BankWithdrawalMain() {
               <div className="v-input withdraw-box v-input--dense theme--light v-text-field v-text-field--enclosed v-text-field--outlined">
                 <div className="v-input__control">
                   <div className="v-input__slot depo-input-slot bank-withdraw-select-slot">
-                    <select
+                    <input
                       id="withdraw-phone-desktop"
                       className="bank-withdraw-native-select"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel"
+                      placeholder="মোবাইল নম্বর"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       aria-label="মোবাইল নম্বর"
-                    >
-                      <option value="">নম্বর নির্বাচন করুন</option>
-                      <option value="1824343428">1824343428</option>
-                    </select>
+                    />
                     <span className="bank-withdraw-select-chevron" aria-hidden>
                       ▼
                     </span>
@@ -218,16 +290,17 @@ export function BankWithdrawalMain() {
               <div className="v-input theme--light v-text-field v-text-field--outlined v-select bank-withdraw-mobile-select-wrap">
                 <div className="v-input__control">
                   <div className="v-input__slot depo-input-slot bank-withdraw-select-slot">
-                    <select
+                    <input
                       id="withdraw-phone-mobile"
                       className="bank-withdraw-native-select"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel"
+                      placeholder="মোবাইল নম্বর"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       aria-label="মোবাইল নম্বর"
-                    >
-                      <option value="">Select your phone</option>
-                      <option value="1824343428">1824343428</option>
-                    </select>
+                    />
                     <span className="bank-withdraw-select-chevron" aria-hidden>
                       ▼
                     </span>
@@ -242,6 +315,7 @@ export function BankWithdrawalMain() {
               <button
                 type="submit"
                 disabled={submitDisabled}
+                aria-busy={busy}
                 className="dialog-button theme-button withdraw-width v-btn v-btn--has-bg theme--light v-size--default withdraw-btn-desktop"
               >
                 <span className="v-btn__content">উত্তোলন</span>

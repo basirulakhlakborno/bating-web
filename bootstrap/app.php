@@ -11,6 +11,21 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->validateCsrfTokens(except: [
+            'login',
+            'api/login',
+            'logout',
+            'register',
+            'register/captcha',
+            'csrf-token',
+            'api/deposit',
+            'api/webhooks/deposit',
+            'api/me',
+            'api/profile/password',
+            'api/inbox',
+            'api/bank/withdraw',
+            'api/bank/history',
+        ]);
         $middleware->append(\App\Http\Middleware\CacheHeaders::class);
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,

@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:host": "NODE_OPTIONS=--max-old-space-size=8192 npm run build",
     "lint": "eslint .",
     "preview": "vite preview",
     "copy:assets": "node scripts/copy-assets.cjs"
   },
   "dependencies": {
+    "@intercom/messenger-js-sdk": "^0.0.18",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.2"

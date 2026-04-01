@@ -1,13 +1,29 @@
+# Laravel — Apache DocumentRoot is the project folder (e.g. XAMPP htdocs/app).
+# Prefer pointing DocumentRoot at /public in production and removing this file.
+
 DirectoryIndex index.php index.html
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    # Only skip rewrite for real *files* at project root (e.g. index.php).
-    # Do not use -d here: "/" would match the project folder and skip rewrites,
-    # and "/storage" would expose the app storage path instead of public/storage.
+
+    # API / Sanctum: forward Authorization to PHP (same idea as public/.htaccess)
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Block direct web access to sensitive project-root files
+    RewriteRule ^\.env$ - [F,L]
+    RewriteRule ^\.env\. - [F,L]
+    RewriteRule ^composer\.(json|lock)$ - [F,L]
+    RewriteRule ^package(-lock)?\.json$ - [F,L]
+    RewriteRule ^phpunit\.xml(\.dist)?$ - [F,L]
+    RewriteRule ^\.git/ - [F,L]
+
+    # Only skip rewrite for real *files* at project root (e.g. root index.php shim).
+    # Do not use -d: "/" would match the project directory and "/storage" could hit /storage
+    # instead of public/storage (symlink).
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
-    # Map /path → public/path (assets, routes, etc.)
-    RewriteRule ^(.+)$ public/$1 [L,QSA]
+    # Map / and /path → public/ (front controller, assets, public/storage)
+    RewriteRule ^(.*)$ public/$1 [L,QSA]
 </IfModule>

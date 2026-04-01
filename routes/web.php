@@ -9,59 +9,69 @@ use App\Http\Controllers\Admin\UserAdminController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterCaptchaController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Api\PlayerAccountController;
+use App\Http\Controllers\DepositApiController;
+use App\Http\Controllers\ReferralApiController;
+use App\Http\Controllers\SpaController;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'home', ['title' => config('app.name')]);
+/*
+|--------------------------------------------------------------------------
+| JSON/HTML auth & registration (AJAX from React: Accept: application/json)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('throttle:auth-login')->group(function (): void {
+    Route::post('/login', [LoginController::class, 'login']);
+    Route::post('/api/login', [LoginController::class, 'login']);
+});
 
-foreach (config('nav_pages') as $path => $row) {
-    $label = $row['title'] ?? $path;
-    $suffix = ' | ' . config('app.name');
-    Route::view($path, 'nav-page', [
-        'title' => $label . $suffix,
-        'metaTitle' => $label . $suffix,
-        'ogTitle' => $label . $suffix,
-        'heading' => $row['heading'] ?? $label,
-        'description' => $row['description'] ?? null,
-    ]);
-}
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->middleware(['auth', 'throttle:auth-logout'])
+    ->name('logout');
 
-Route::view('/login', 'login', [
-    'title' => 'লগইন | ' . config('app.name'),
-    'metaTitle' => 'লগইন | ' . config('app.name'),
-    'ogTitle' => 'লগইন | ' . config('app.name'),
-])->name('login');
+Route::middleware('throttle:api-captcha')->group(function (): void {
+    Route::get('/register/captcha', [RegisterCaptchaController::class, 'image'])->name('register.captcha');
+});
 
-Route::post('/login', [LoginController::class, 'login']);
+Route::post('/register', [RegisterController::class, 'register'])->middleware('throttle:auth-register');
 
-Route::view('/register', 'register', [
-    'title' => 'নিবন্ধন | ' . config('app.name'),
-    'metaTitle' => 'নিবন্ধন | ' . config('app.name'),
-    'ogTitle' => 'নিবন্ধন | ' . config('app.name'),
-])->name('register');
+Route::middleware('throttle:api-player-read')->group(function (): void {
+    Route::get('/api/me', [PlayerAccountController::class, 'me']);
+    Route::get('/api/inbox', [PlayerAccountController::class, 'inbox']);
+    Route::get('/api/referral', [ReferralApiController::class, 'show']);
+    Route::get('/api/bank/history', [PlayerAccountController::class, 'bankHistory']);
+});
 
-Route::get('/register/captcha', [RegisterCaptchaController::class, 'image'])->name('register.captcha');
+Route::post('/api/profile/password', [PlayerAccountController::class, 'changePassword'])
+    ->middleware('throttle:api-player-write');
 
-Route::post('/register', [RegisterController::class, 'register']);
+Route::post('/api/bank/withdraw', [PlayerAccountController::class, 'withdraw'])
+    ->middleware('throttle:api-withdraw');
 
-Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
+Route::post('/api/deposit', [DepositApiController::class, 'store'])->middleware('throttle:deposit-jwt');
+Route::post('/api/webhooks/deposit', \App\Http\Controllers\DepositWebhookController::class)->middleware('throttle:deposit-webhook');
 
-Route::view('/profileAccount', 'nav-page', [
-    'title' => 'অ্যাকাউন্ট | '.config('app.name'),
-    'metaTitle' => 'অ্যাকাউন্ট | '.config('app.name'),
-    'ogTitle' => 'অ্যাকাউন্ট | '.config('app.name'),
-    'heading' => 'অ্যাকাউন্ট',
-    'description' => 'প্রোফাইল এবং সেটিংস শীঘ্রই এখানে থাকবে।',
-])->middleware('auth');
+Route::get('/csrf-token', static fn () => response()->json(['csrfToken' => csrf_token()]))
+    ->middleware('throttle:api-csrf')
+    ->name('csrf.token');
 
-Route::view('/profile/inbox', 'nav-page', [
-    'title' => 'ইনবক্স | '.config('app.name'),
-    'metaTitle' => 'ইনবক্স | '.config('app.name'),
-    'ogTitle' => 'ইনবক্স | '.config('app.name'),
-    'heading' => 'ইনবক্স',
-    'description' => 'আপনার বার্তা এখানে দেখানো হবে।',
-])->middleware('auth');
+/*
+|--------------------------------------------------------------------------
+| Player SPA (Vite build → public/dist)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('throttle:spa-html')->group(function (): void {
+    Route::get('/', SpaController::class)->name('home');
+    Route::get('/login', SpaController::class)->name('login');
+    Route::get('/register', SpaController::class)->name('register');
+});
 
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function (): void {
+/*
+| Profile SPA routes are served like other player pages (JWT in SPA, not Laravel session).
+| Do not wrap in `auth` middleware or JWT-only users get redirected on refresh/deep link.
+*/
+
+Route::middleware(['auth', 'admin', 'throttle:admin'])->prefix('admin')->name('admin.')->group(function (): void {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::resource('games', GameAdminController::class)->except(['show']);
     Route::get('navigation', [NavigationAdminController::class, 'index'])->name('navigation.index');
@@ -77,3 +87,5 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('users', [UserAdminController::class, 'index'])->name('users.index');
     Route::post('users/{user}/role', [UserAdminController::class, 'updateRole'])->name('users.role');
 });
+
+Route::fallback(SpaController::class)->middleware('throttle:spa-html');

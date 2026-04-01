@@ -1,4 +1,5 @@
 import { CurrencyLanguageDialog } from './CurrencyLanguageDialog'
+import { openIntercomMessenger } from '../lib/intercom'
 
 type Props = {
   drawerOpen: boolean
@@ -22,9 +23,15 @@ export function GlobalOverlays({ drawerOpen, onCloseDrawer, currencyOpen, onClos
       <div role="dialog" className="v-dialog__container" style={{ position: 'relative' }}></div>
       <div data-v-136dc7e0="" role="dialog" className="v-dialog__container"></div>
 
-      <div id="my_custom_link" className="floating-left">
-        <img src="/static/image/icon/icon-live-chat.png" alt="live-chat" />
-      </div>
+      <button
+        type="button"
+        id="my_custom_link"
+        className="floating-left"
+        onClick={() => void openIntercomMessenger()}
+        aria-label="সরাসরি কথোপকথন — সহায়তা নিন"
+      >
+        <img src="/static/image/icon/icon-live-chat.png" alt="" width={56} height={56} />
+      </button>
       <CurrencyLanguageDialog open={currencyOpen} onClose={onCloseCurrency} />
 
       <div

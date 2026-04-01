@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-
 const staticSvg = (name: string) => `https://babu88.gold/static/svg/${name}`
 
 export type ProfilePersonalMobileSummaryProps = {
@@ -48,9 +46,6 @@ export function ProfilePersonalMobileSummary({
             <span className="profile-mobile-summary-label">পুরস্কারের কয়েন</span>
             <span className="panel-blue-text"> {rewardCoins}</span>
           </div>
-          <Link to="/reward/rewardStore" className="nav-btn v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--small text-decoration-none profile-mobile-summary-link">
-            <span className="v-btn__content">পুরস্কার</span>
-          </Link>
         </div>
         <div className="profile-mobile-summary-row2">
           <div>

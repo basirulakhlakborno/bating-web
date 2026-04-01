@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { playerJson } from '../../lib/playerApi'
 
 const HISTORY_TABS = [
   { id: 'deposit', label: 'জমার ইতিহাস' },
@@ -23,6 +24,50 @@ const DEPOSIT_COLUMNS = [
   { key: 'status', label: 'স্ট্যাটাস' },
   { key: 'remark', label: 'মন্তব্য' },
 ]
+
+const WITHDRAWAL_COLUMNS = [
+  { key: 'date', label: 'তারিখ', sortable: true },
+  { key: 'method', label: 'পদ্ধতি' },
+  { key: 'amount', label: 'পরিমাণ' },
+  { key: 'reference', label: 'রেফারেন্স' },
+  { key: 'phone', label: 'ফোন' },
+  { key: 'status', label: 'স্ট্যাটাস' },
+]
+
+type DepositApiRow = {
+  id: number
+  kind?: string
+  created_at?: string
+  amount?: string
+  currency_code?: string
+  method?: string
+  channel?: string
+  reference?: string | null
+  status?: string
+  bonus?: string
+  remark?: string
+}
+
+type WithdrawalApiRow = {
+  id: number
+  kind?: string
+  created_at?: string
+  amount?: string
+  currency_code?: string
+  method?: string
+  account_phone?: string | null
+  reference?: string | null
+  status?: string
+}
+
+function formatWhen(iso?: string) {
+  if (!iso) return '—'
+  try {
+    return new Date(iso).toLocaleString()
+  } catch {
+    return iso
+  }
+}
 
 function ChevronDown({ large }: { large?: boolean }) {
   return (
@@ -52,6 +97,53 @@ export function BankHistoryMain() {
   const [activeTab, setActiveTab] = useState<HistoryTabId>('deposit')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [deposits, setDeposits] = useState<DepositApiRow[]>([])
+  const [withdrawals, setWithdrawals] = useState<WithdrawalApiRow[]>([])
+
+  const fetchHistory = useCallback(async () => {
+    setLoading(true)
+    try {
+      const q = new URLSearchParams()
+      if (dateFrom.trim()) q.set('from', dateFrom.trim())
+      if (dateTo.trim()) q.set('to', dateTo.trim())
+      const path = `/api/bank/history${q.toString() ? `?${q.toString()}` : ''}`
+      const { ok, data } = await playerJson<{ deposits?: DepositApiRow[]; withdrawals?: WithdrawalApiRow[] }>(path, {
+        method: 'GET',
+      })
+      if (ok) {
+        setDeposits(data.deposits ?? [])
+        setWithdrawals(data.withdrawals ?? [])
+      } else {
+        window.showToast?.('ইতিহাস লোড করা যায়নি।', { type: 'error' })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [dateFrom, dateTo])
+
+  useEffect(() => {
+    void fetchHistory()
+    // Intentionally once on mount; search button uses latest fetchHistory with current dates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const columns = useMemo(() => {
+    if (activeTab === 'withdrawal') return WITHDRAWAL_COLUMNS
+    if (activeTab === 'deposit') return DEPOSIT_COLUMNS
+    return [{ key: 'placeholder', label: 'বিবরণ', sortable: false }]
+  }, [activeTab])
+
+  const rowsForTab = useMemo(() => {
+    if (activeTab === 'deposit') return deposits
+    if (activeTab === 'withdrawal') return withdrawals
+    return []
+  }, [activeTab, deposits, withdrawals])
+
+  const showEmpty =
+    (activeTab === 'deposit' || activeTab === 'withdrawal') && !loading && rowsForTab.length === 0
+
+  const showPlaceholderTab = activeTab !== 'deposit' && activeTab !== 'withdrawal'
 
   return (
     <div className="desktop-flex-column bank-history-root">
@@ -154,9 +246,11 @@ export function BankHistoryMain() {
                   </div>
                   <button
                     type="button"
+                    disabled={loading}
+                    onClick={() => void fetchHistory()}
                     className="v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--default subtitle-1 embedded-register-button mx-3 bank-history-search-btn"
                   >
-                    <span className="v-btn__content">অনুসন্ধান</span>
+                    <span className="v-btn__content">{loading ? '…' : 'অনুসন্ধান'}</span>
                   </button>
                 </div>
               </div>
@@ -168,7 +262,7 @@ export function BankHistoryMain() {
                   <table className="bank-history-table">
                     <thead>
                       <tr>
-                        {DEPOSIT_COLUMNS.map((col) => (
+                        {columns.map((col) => (
                           <th key={col.key} className="referral-table-header text-start">
                             <span>
                               {col.label}
@@ -186,7 +280,43 @@ export function BankHistoryMain() {
                         ))}
                       </tr>
                     </thead>
-                    <tbody></tbody>
+                    <tbody>
+                      {showPlaceholderTab ? (
+                        <tr>
+                          <td colSpan={columns.length} className="text-center py-6">
+                            এই ধরনের ইতিহাস এখনও সার্ভার থেকে পাওয়া যায়নি।
+                          </td>
+                        </tr>
+                      ) : activeTab === 'deposit' ? (
+                        deposits.map((row) => (
+                          <tr key={`d-${row.id}`}>
+                            <td>{formatWhen(row.created_at)}</td>
+                            <td>{row.method ?? '—'}</td>
+                            <td>{row.channel ?? '—'}</td>
+                            <td>{row.id}</td>
+                            <td>
+                              {row.amount ?? '—'} {row.currency_code ?? ''}
+                            </td>
+                            <td>{row.bonus ?? '—'}</td>
+                            <td>{row.status ?? '—'}</td>
+                            <td>{row.remark ?? ''}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        withdrawals.map((row) => (
+                          <tr key={`w-${row.id}`}>
+                            <td>{formatWhen(row.created_at)}</td>
+                            <td>{row.method ?? '—'}</td>
+                            <td>
+                              {row.amount ?? '—'} {row.currency_code ?? ''}
+                            </td>
+                            <td>{row.reference ?? '—'}</td>
+                            <td>{row.account_phone ?? '—'}</td>
+                            <td>{row.status ?? '—'}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
                   </table>
                 </div>
               </div>
@@ -194,7 +324,9 @@ export function BankHistoryMain() {
 
             <div className="row bank-history-empty-footer">
               <div className="text-center pt-0 pb-8 col col-12">
-                <span className="referral-table-header subtitle-2">কোন তথ্য নেই</span>
+                <span className="referral-table-header subtitle-2">
+                  {loading ? 'লোড হচ্ছে…' : showEmpty ? 'কোন তথ্য নেই' : ''}
+                </span>
               </div>
             </div>
           </div>

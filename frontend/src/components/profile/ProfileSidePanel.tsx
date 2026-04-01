@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-
 const staticSvg = (name: string) => `https://babu88.gold/static/svg/${name}`
 
 export type ProfileSidePanelProps = {
@@ -111,11 +109,6 @@ export function ProfileSidePanel({
                   </div>
                   <div className="g-text col col-12">
                     <span className="panel-blue-text">{rewardCoins}</span>
-                  </div>
-                  <div className="mt-2 col col-12">
-                    <Link to="/reward/rewardStore" className="nav-btn v-btn v-btn--is-elevated v-btn--has-bg theme--light v-size--default text-decoration-none">
-                      <span className="v-btn__content">পুরস্কার-এ যান</span>
-                    </Link>
                   </div>
                 </div>
               </div>

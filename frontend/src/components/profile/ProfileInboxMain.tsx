@@ -31,14 +31,10 @@ function TrashIcon() {
   )
 }
 
-const defaultMessages: InboxMessage[] = [
-  { id: '1', title: '🏏 Unlock Your IPL Betting Pass', date: '2026-03-30', time: '04:47' },
-]
-
 type InboxTab = 'inbox' | 'notices'
 
 export function ProfileInboxMain({
-  messages = defaultMessages,
+  messages = [],
 }: {
   messages?: InboxMessage[]
 }) {
@@ -62,11 +58,9 @@ export function ProfileInboxMain({
   }
 
   const toggleAll = () => {
-    if (selectAll || selectedIds.size === list.length) {
-      setSelectAll(false)
+    if (allSelected) {
       setSelectedIds(new Set())
     } else {
-      setSelectAll(true)
       setSelectedIds(new Set(list.map((m) => m.id)))
     }
   }

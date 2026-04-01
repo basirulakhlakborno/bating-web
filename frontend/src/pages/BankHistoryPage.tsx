@@ -1,20 +1,14 @@
 import { BankHistoryMain } from '../components/bank/BankHistoryMain'
 import { BankPageLayout, bankMainWideClass } from '../components/bank/BankPageLayout'
-import type { ProfileSidePanelProps } from '../components/profile/ProfileSidePanel'
-
-const mockSide: ProfileSidePanelProps = {
-  memberCode: '—',
-  bettingTierLabel: 'স্তর 1',
-  bettingProgress: '0/200.00',
-  vipLabel: 'MEMBER',
-  referralCode: '—',
-  rewardCoins: '0',
-  referralWallet: '৳ 0.00',
-}
+import { useProfileAuth } from '../lib/useProfileAuth'
 
 export function BankHistoryPage() {
+  const { user, loading, side } = useProfileAuth()
+
+  if (loading || !user || !side) return null
+
   return (
-    <BankPageLayout side={mockSide} mainColumnClassName={bankMainWideClass}>
+    <BankPageLayout side={side} mainColumnClassName={bankMainWideClass}>
       <BankHistoryMain />
     </BankPageLayout>
   )

@@ -1,9 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// Production build → `../public/dist` (Laravel `SpaController`). Use `base: '/dist/'` so assets resolve on the same host.
 // Env: `.env.development` → `VITE_API_BASE_URL` (Laravel origin); `.env.production` → empty = same-origin `/`.
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/dist/' : '/',
+  build: {
+    outDir: '../public/dist',
+    emptyOutDir: true,
+  },
   plugins: [
     react(),
     {
@@ -20,4 +26,4 @@ export default defineConfig({
       },
     },
   ],
-})
+}))

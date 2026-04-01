@@ -4,6 +4,7 @@ import { AppShellTop } from '../components/AppShellTop'
 import { BottomNav } from '../components/BottomNav'
 import { Footer } from '../components/Footer'
 import { GlobalOverlays } from '../components/GlobalOverlays'
+import { IntercomBootstrap } from '../components/IntercomBootstrap'
 import { SubNavigators } from '../components/SubNavigators'
 
 /** Shell from `home.blade.php` / `login.blade.php` — `body` vs `body auth-page-body`. */
@@ -15,11 +16,13 @@ export function Babu88Layout() {
   const useMainBody =
     path === '/' ||
     path.startsWith('/profile') ||
-    path.startsWith('/bank')
+    path.startsWith('/bank') ||
+    path.startsWith('/referral')
   const bodyClass = useMainBody ? 'body' : 'body auth-page-body'
 
   return (
     <div data-app="true" className="v-application v-application--is-ltr theme--light" id="app">
+      <IntercomBootstrap />
       <div className="v-application--wrap">
         <div>
           <AppShellTop

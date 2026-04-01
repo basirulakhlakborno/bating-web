@@ -1,9 +1,12 @@
 *.log
+__pycache__/
+*.pyc
 .DS_Store
 .env
 .env.backup
 .env.production
 .env.local
+.deploy_ftp_manifest.json
 .phpactor.json
 .phpunit.result.cache
 .phpstan

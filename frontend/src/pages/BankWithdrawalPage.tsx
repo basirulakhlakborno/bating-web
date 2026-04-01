@@ -2,23 +2,17 @@ import { BankDepositMobileHeader } from '../components/bank/BankDepositMobileHea
 import { BankDepositNotices } from '../components/bank/BankDepositNotices'
 import { BankPageLayout } from '../components/bank/BankPageLayout'
 import { BankWithdrawalMain } from '../components/bank/BankWithdrawalMain'
-import type { ProfileSidePanelProps } from '../components/profile/ProfileSidePanel'
-
-const mockSide: ProfileSidePanelProps = {
-  memberCode: '—',
-  bettingTierLabel: 'স্তর 1',
-  bettingProgress: '0/200.00',
-  vipLabel: 'MEMBER',
-  referralCode: '—',
-  rewardCoins: '0',
-  referralWallet: '৳ 0.00',
-}
+import { useProfileAuth } from '../lib/useProfileAuth'
 
 export function BankWithdrawalPage() {
+  const { user, loading, side, reloadUser } = useProfileAuth()
+
+  if (loading || !user || !side) return null
+
   return (
-    <BankPageLayout side={mockSide} rightRail={<BankDepositNotices />}>
+    <BankPageLayout side={side} rightRail={<BankDepositNotices />}>
       <BankDepositMobileHeader />
-      <BankWithdrawalMain />
+      <BankWithdrawalMain user={user} onBalanceRefresh={reloadUser} />
     </BankPageLayout>
   )
 }
