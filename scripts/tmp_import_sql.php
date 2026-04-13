@@ -11,6 +11,7 @@
  *   # Put mysqldump output here:
  *   # import.sql  (same directory as artisan — project root)
  *   php scripts/tmp_import_sql.php
+ *   php scripts/tmp_import_sql.php /path/to/dump.sql
  *   php scripts/tmp_import_sql.php --with-migrate   # migrate --force, then import
  *
  * Full mysqldump (with DROP/CREATE): import usually replaces migrations — do not use --with-migrate.
@@ -28,7 +29,17 @@ $repoRoot = dirname(__DIR__);
 $envPath = $repoRoot.'/.env';
 $sqlPath = $repoRoot.'/import.sql';
 
-$withMigrate = in_array('--with-migrate', $argv, true);
+$withMigrate = false;
+foreach (array_slice($argv, 1) as $arg) {
+    if ($arg === '--with-migrate') {
+        $withMigrate = true;
+    } elseif ($arg !== '' && $arg[0] !== '-') {
+        $sqlPath = $arg;
+        if ($sqlPath[0] !== '/') {
+            $sqlPath = $repoRoot.'/'.ltrim($sqlPath, '/');
+        }
+    }
+}
 
 function parse_env_file(string $path): array
 {
@@ -61,8 +72,9 @@ if (! is_readable($envPath)) {
 }
 
 if (! is_readable($sqlPath)) {
-    fwrite(STDERR, "Missing or unreadable import.sql at {$sqlPath}\n");
-    fwrite(STDERR, "Place your mysqldump (or data-only .sql) next to artisan as import.sql\n");
+    fwrite(STDERR, "Missing or unreadable SQL file: {$sqlPath}\n");
+    fwrite(STDERR, "Upload your .sql to the project root as import.sql, or run:\n");
+    fwrite(STDERR, "  php scripts/tmp_import_sql.php /full/path/to/your_dump.sql\n");
     exit(1);
 }
 
