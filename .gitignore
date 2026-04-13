@@ -6,6 +6,7 @@ __pycache__/
 .env.backup
 .env.production
 .env.local
+/import.sql
 .deploy_ftp_manifest.json
 /scripts/ftp-deploy.config.ps1
 /scripts/ftp_deploy_config.ini
