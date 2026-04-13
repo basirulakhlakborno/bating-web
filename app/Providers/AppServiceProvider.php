@@ -8,6 +8,7 @@ use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +21,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Shared MySQL (utf8mb4): varchar(255) unique/primary indexes exceed legacy 1000-byte limit — use 191.
+        Schema::defaultStringLength(191);
+
         RedirectIfAuthenticated::redirectUsing(function (Request $request): string {
             if ($request->is('hakai/admin/login')) {
                 return route('admin.dashboard');
