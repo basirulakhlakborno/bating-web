@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { navPageEntries } from '../config/navPages'
+import { useSiteLayout } from '../hooks/useSiteLayout'
 import { openIntercomMessenger } from '../lib/intercom'
 
 type Props = {
@@ -35,6 +36,9 @@ function DrawerLink({
 
 /** Simplified `navigation-drawer.blade.php` — static links from `nav_pages`. */
 export function NavigationDrawer({ open, onClose, onLanguageClick }: Props) {
+  const layout = useSiteLayout()
+  const drawerLogoSrc = layout?.layoutSiteDrawerLogoPath ?? ''
+
   return (
     <aside
       className="mobile-navigation-drawer v-navigation-drawer v-navigation-drawer--absolute v-navigation-drawer--is-mobile v-navigation-drawer--temporary theme--light"
@@ -54,7 +58,9 @@ export function NavigationDrawer({ open, onClose, onLanguageClick }: Props) {
         <div className="row">
           <div className="mobile-drawer-menu-header-section col col-12">
             <Link to="/" className="mobile-drawer-menu-logo router-link-active" onClick={onClose}>
-              <img src="/static/svg/babu88_logo_black.svg" alt="" width={180} height={30} className="mt-4" />
+              {drawerLogoSrc ? (
+                <img src={drawerLogoSrc} alt="" className="drawer-menu-logo-img mt-4" decoding="async" />
+              ) : null}
             </Link>
             <button
               type="button"

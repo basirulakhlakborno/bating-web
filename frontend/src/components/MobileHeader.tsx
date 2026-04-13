@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useSiteLayout } from '../hooks/useSiteLayout'
 import { useAuthUserSnapshot } from '../lib/useAuthUserSnapshot'
 import { formatInboxBadgeCount, useInboxUnreadCount } from '../lib/useInboxUnreadCount'
 
@@ -9,6 +10,8 @@ type Props = {
 
 /** Guest toolbar from `mobile-header.blade.php` (@else branch). */
 export function MobileHeader({ onMenuClick, onCurrencyClick }: Props) {
+  const layout = useSiteLayout()
+  const headerLogoSrc = layout?.layoutSiteHeaderLogoPath ?? ''
   const user = useAuthUserSnapshot()
   const isLoggedIn = !!user
   const inboxUnread = useInboxUnreadCount()
@@ -31,9 +34,11 @@ export function MobileHeader({ onMenuClick, onCurrencyClick }: Props) {
                 </span>
               </button>
             </div>
-            <div className="mobile-header-logo col col-9">
-              <Link to="/" className="router-link-active" style={{ display: 'flex', alignItems: 'center' }}>
-                <img src="/static/svg/bb88_logo_animation2.gif" alt="" width={215} height={45} />
+            <div className="mobile-header-logo col col-9 header-logo-col">
+              <Link to="/" className="router-link-active header-logo-link" style={{ display: 'flex', alignItems: 'center' }}>
+                {headerLogoSrc ? (
+                  <img src={headerLogoSrc} alt="" className="mobile-header-logo-img" decoding="async" />
+                ) : null}
               </Link>
             </div>
             <div className="text-right col col-2 d-flex align-center justify-end logged-in-mobile-toolbar" style={{ gap: 2, flexWrap: 'nowrap' }}>

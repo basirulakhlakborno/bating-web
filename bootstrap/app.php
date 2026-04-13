@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Middleware\CacheHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -11,6 +13,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectGuestsTo(function (Request $request): string {
+            if ($request->is('hakai/admin') || $request->is('hakai/admin/*')) {
+                return route('admin.login');
+            }
+
+            return route('login');
+        });
         $middleware->validateCsrfTokens(except: [
             'login',
             'api/login',
@@ -26,10 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/bank/withdraw',
             'api/bank/history',
         ]);
-        $middleware->append(\App\Http\Middleware\CacheHeaders::class);
-        $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
-        ]);
+        $middleware->append(CacheHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

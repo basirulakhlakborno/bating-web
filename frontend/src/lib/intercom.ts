@@ -22,6 +22,8 @@ export function intercomIdentityEmail(user: AuthUser): string | undefined {
 }
 
 function getAppId(): string | undefined {
+  const fromServer = window.__SITE_DATA__?.intercomAppId?.trim()
+  if (fromServer) return fromServer
   const id = import.meta.env.VITE_INTERCOM_APP_ID as string | undefined
   return id?.trim() || undefined
 }

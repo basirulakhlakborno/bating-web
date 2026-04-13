@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import { useSiteLayout } from '../hooks/useSiteLayout'
 import { clearAuthStorage } from '../lib/authFormFetch'
 import { useAuthUserSnapshot } from '../lib/useAuthUserSnapshot'
 import { formatInboxBadgeCount, useInboxUnreadCount } from '../lib/useInboxUnreadCount'
@@ -10,6 +11,8 @@ type Props = {
 
 /** Guest actions from `desktop-header.blade.php` (@else branch). */
 export function DesktopHeader({ onCurrencyClick }: Props) {
+  const layout = useSiteLayout()
+  const headerLogoSrc = layout?.layoutSiteHeaderLogoPath ?? ''
   const user = useAuthUserSnapshot()
   const inboxUnread = useInboxUnreadCount()
   const session = user ? { isLoggedIn: true, username: user.username || 'ব্যবহারকারী' } : { isLoggedIn: false, username: '' }
@@ -26,16 +29,16 @@ export function DesktopHeader({ onCurrencyClick }: Props) {
 
   return (
     <div className="row hidden-sm-and-down header-top no-gutters align-center justify-space-between">
-      <div className="header-column col col-5">
-        <Link to="/" className="router-link-active">
-          <img
-            src="/static/svg/bb88_logo_animation2.gif"
-            alt=""
-            className="desktop-header-logo-img"
-            width={312}
-            height={58}
-            style={{ float: 'left' }}
-          />
+      <div className="header-column col col-5 header-logo-col">
+        <Link to="/" className="router-link-active header-logo-link">
+          {headerLogoSrc ? (
+            <img
+              src={headerLogoSrc}
+              alt=""
+              className="desktop-header-logo-img"
+              decoding="async"
+            />
+          ) : null}
         </Link>
       </div>
       <div className="header-column register-dialog text-right col-md-6 col-lg-5 col-5">

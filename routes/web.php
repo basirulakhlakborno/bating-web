@@ -1,18 +1,28 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FooterAdminController;
 use App\Http\Controllers\Admin\GameAdminController;
+use App\Http\Controllers\Admin\GameCategoryAdminController;
+use App\Http\Controllers\Admin\HomeCricketMatchAdminController;
+use App\Http\Controllers\Admin\MediaAssetAdminController;
+use App\Http\Controllers\Admin\MessageAdminController;
 use App\Http\Controllers\Admin\NavigationAdminController;
+use App\Http\Controllers\Admin\PaymentMethodAdminController;
 use App\Http\Controllers\Admin\SiteSettingAdminController;
+use App\Http\Controllers\Admin\SocialLinkAdminController;
+use App\Http\Controllers\Admin\TransactionAdminController;
 use App\Http\Controllers\Admin\UserAdminController;
+use App\Http\Controllers\Api\PlayerAccountController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterCaptchaController;
 use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\Api\PlayerAccountController;
 use App\Http\Controllers\DepositApiController;
+use App\Http\Controllers\DepositWebhookController;
 use App\Http\Controllers\ReferralApiController;
 use App\Http\Controllers\SpaController;
+use App\Services\SiteLayoutData;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -49,11 +59,26 @@ Route::post('/api/bank/withdraw', [PlayerAccountController::class, 'withdraw'])
     ->middleware('throttle:api-withdraw');
 
 Route::post('/api/deposit', [DepositApiController::class, 'store'])->middleware('throttle:deposit-jwt');
-Route::post('/api/webhooks/deposit', \App\Http\Controllers\DepositWebhookController::class)->middleware('throttle:deposit-webhook');
+Route::post('/api/webhooks/deposit', DepositWebhookController::class)->middleware('throttle:deposit-webhook');
 
 Route::get('/csrf-token', static fn () => response()->json(['csrfToken' => csrf_token()]))
     ->middleware('throttle:api-csrf')
     ->name('csrf.token');
+
+Route::get('/api/site-layout', static function () {
+    $data = SiteLayoutData::shared();
+
+    return response()->json($data)->header('Cache-Control', 'public, max-age=60');
+})->middleware('throttle:api-player-read');
+
+Route::get('/api/home', static function () {
+    return response()
+        ->json([
+            'featuredGames' => SiteLayoutData::featuredHomeGames()->values(),
+            'homeMatches' => SiteLayoutData::homeMatchHighlights(),
+        ])
+        ->header('Cache-Control', 'public, max-age=60');
+})->middleware('throttle:api-player-read');
 
 /*
 |--------------------------------------------------------------------------
@@ -71,21 +96,72 @@ Route::middleware('throttle:spa-html')->group(function (): void {
 | Do not wrap in `auth` middleware or JWT-only users get redirected on refresh/deep link.
 */
 
-Route::middleware(['auth', 'admin', 'throttle:admin'])->prefix('admin')->name('admin.')->group(function (): void {
-    Route::get('/', DashboardController::class)->name('dashboard');
-    Route::resource('games', GameAdminController::class)->except(['show']);
-    Route::get('navigation', [NavigationAdminController::class, 'index'])->name('navigation.index');
-    Route::get('navigation/{item}/edit', [NavigationAdminController::class, 'edit'])->name('navigation.edit');
-    Route::put('navigation/{item}', [NavigationAdminController::class, 'update'])->name('navigation.update');
-    Route::get('footer', [FooterAdminController::class, 'index'])->name('footer.index');
-    Route::get('footer/sections/{section}/items/create', [FooterAdminController::class, 'createItem'])->name('footer.items.create');
-    Route::post('footer/sections/{section}/items', [FooterAdminController::class, 'storeItem'])->name('footer.items.store');
-    Route::get('footer/items/{footerItem}/edit', [FooterAdminController::class, 'editItem'])->name('footer.items.edit');
-    Route::put('footer/items/{footerItem}', [FooterAdminController::class, 'updateItem'])->name('footer.items.update');
-    Route::get('settings', [SiteSettingAdminController::class, 'edit'])->name('settings.edit');
-    Route::put('settings', [SiteSettingAdminController::class, 'update'])->name('settings.update');
-    Route::get('users', [UserAdminController::class, 'index'])->name('users.index');
-    Route::post('users/{user}/role', [UserAdminController::class, 'updateRole'])->name('users.role');
+Route::prefix('hakai/admin')->name('admin.')->group(function (): void {
+    Route::middleware('guest:admin')->group(function (): void {
+        Route::get('login', [AdminLoginController::class, 'create'])->name('login');
+        Route::post('login', [AdminLoginController::class, 'store'])->middleware('throttle:auth-login')->name('login.store');
+    });
+
+    Route::middleware(['auth:admin', 'throttle:admin'])->group(function (): void {
+        Route::post('logout', [AdminLoginController::class, 'destroy'])->name('logout');
+
+        Route::get('/', DashboardController::class)->name('dashboard');
+
+        // Games
+        Route::resource('games', GameAdminController::class)->except(['show']);
+
+        // Game categories
+        Route::resource('game-categories', GameCategoryAdminController::class)->except(['show']);
+
+        // Homepage cricket highlights
+        Route::resource('home-cricket-matches', HomeCricketMatchAdminController::class)->except(['show']);
+
+        // Navigation
+        Route::get('navigation', [NavigationAdminController::class, 'index'])->name('navigation.index');
+        Route::get('navigation/create', [NavigationAdminController::class, 'create'])->name('navigation.create');
+        Route::post('navigation', [NavigationAdminController::class, 'store'])->name('navigation.store');
+        Route::get('navigation/{item}/edit', [NavigationAdminController::class, 'edit'])->name('navigation.edit');
+        Route::put('navigation/{item}', [NavigationAdminController::class, 'update'])->name('navigation.update');
+        Route::delete('navigation/{item}', [NavigationAdminController::class, 'destroy'])->name('navigation.destroy');
+
+        // Footer
+        Route::get('footer', [FooterAdminController::class, 'index'])->name('footer.index');
+        Route::get('footer/sections/{section}/items/create', [FooterAdminController::class, 'createItem'])->name('footer.items.create');
+        Route::post('footer/sections/{section}/items', [FooterAdminController::class, 'storeItem'])->name('footer.items.store');
+        Route::get('footer/items/{footerItem}/edit', [FooterAdminController::class, 'editItem'])->name('footer.items.edit');
+        Route::put('footer/items/{footerItem}', [FooterAdminController::class, 'updateItem'])->name('footer.items.update');
+
+        // Banners & media
+        Route::resource('media', MediaAssetAdminController::class)->except(['show']);
+
+        // Social links
+        Route::resource('social-links', SocialLinkAdminController::class)->except(['show']);
+
+        // Payment methods
+        Route::resource('payment-methods', PaymentMethodAdminController::class)->except(['show']);
+
+        // Deposits
+        Route::get('deposits', [TransactionAdminController::class, 'deposits'])->name('deposits.index');
+        Route::post('deposits/{deposit}/status', [TransactionAdminController::class, 'updateDepositStatus'])->name('deposits.status');
+
+        // Withdrawals
+        Route::get('withdrawals', [TransactionAdminController::class, 'withdrawals'])->name('withdrawals.index');
+        Route::post('withdrawals/{withdrawal}/status', [TransactionAdminController::class, 'updateWithdrawalStatus'])->name('withdrawals.status');
+
+        // Messages
+        Route::get('messages', [MessageAdminController::class, 'index'])->name('messages.index');
+        Route::get('messages/create', [MessageAdminController::class, 'create'])->name('messages.create');
+        Route::post('messages', [MessageAdminController::class, 'store'])->name('messages.store');
+        Route::delete('messages/{message}', [MessageAdminController::class, 'destroy'])->name('messages.destroy');
+
+        // Site settings
+        Route::get('settings', [SiteSettingAdminController::class, 'edit'])->name('settings.edit');
+        Route::put('settings', [SiteSettingAdminController::class, 'update'])->name('settings.update');
+
+        // Players
+        Route::get('users', [UserAdminController::class, 'index'])->name('users.index');
+        Route::post('users/{user}/role', [UserAdminController::class, 'updateRole'])->name('users.role');
+    });
 });
 
 Route::fallback(SpaController::class)->middleware('throttle:spa-html');

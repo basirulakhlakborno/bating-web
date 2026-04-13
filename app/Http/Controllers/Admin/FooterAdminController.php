@@ -13,18 +13,30 @@ class FooterAdminController extends Controller
 {
     public function index(): View
     {
-        $sections = FooterSection::query()->with(['items'])->orderBy('sort_order')->get();
+        $sections = FooterSection::query()
+            ->where('slug', '!=', 'ambassadors')
+            ->with(['items'])
+            ->orderBy('sort_order')
+            ->get();
 
         return view('admin.footer.index', compact('sections'));
     }
 
     public function editItem(FooterItem $footerItem): View
     {
+        if ($footerItem->section?->slug === 'ambassadors') {
+            abort(404);
+        }
+
         return view('admin.footer.edit-item', compact('footerItem'));
     }
 
     public function updateItem(Request $request, FooterItem $footerItem): RedirectResponse
     {
+        if ($footerItem->section?->slug === 'ambassadors') {
+            abort(404);
+        }
+
         $footerItem->update($request->validate([
             'title' => ['required', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string', 'max:255'],
@@ -38,11 +50,19 @@ class FooterAdminController extends Controller
 
     public function createItem(FooterSection $section): View
     {
+        if ($section->slug === 'ambassadors') {
+            abort(404);
+        }
+
         return view('admin.footer.create-item', ['section' => $section]);
     }
 
     public function storeItem(Request $request, FooterSection $section): RedirectResponse
     {
+        if ($section->slug === 'ambassadors') {
+            abort(404);
+        }
+
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string', 'max:255'],

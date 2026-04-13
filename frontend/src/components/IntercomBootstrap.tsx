@@ -1,35 +1,47 @@
 import { Intercom } from '@intercom/messenger-js-sdk'
+import { useEffect } from 'react'
 import { useAuthUser } from '../hooks/useAuthUser'
+import { useSiteLayout } from '../hooks/useSiteLayout'
 import { intercomIdentityEmail } from '../lib/intercom'
-
-function getAppId(): string | undefined {
-  const id = import.meta.env.VITE_INTERCOM_APP_ID as string | undefined
-  return id?.trim() || undefined
-}
 
 /**
  * Client-side Intercom init (see `@intercom/messenger-js-sdk`).
- * Use named `{ Intercom }` import — CJS default interop under Vite can make default import non-callable.
+ *
+ * The app ID is read from `window.__SITE_DATA__.intercomAppId` (injected by
+ * the Blade template from the database) with a fallback to
+ * `VITE_INTERCOM_APP_ID` for local dev.
+ *
+ * `hide_default_launcher`: the floating support control is `#my_custom_link` in {@link GlobalOverlays}
+ * (click handled there and in the nav drawer via `openIntercomMessenger`).
  */
 export function IntercomBootstrap() {
   const user = useAuthUser()
-  const appId = getAppId()
-  if (!appId) return null
+  const layout = useSiteLayout()
 
-  const email = user ? intercomIdentityEmail(user) : undefined
+  const appId =
+    layout?.intercomAppId?.trim() ||
+    (import.meta.env.VITE_INTERCOM_APP_ID as string | undefined)?.trim() ||
+    undefined
 
-  const payload: Parameters<typeof Intercom>[0] = {
-    app_id: appId,
-    ...(user && {
-      user_id: String(user.id),
-      name: (user.name ?? user.username) || undefined,
-      ...(email ? { email } : {}),
-      ...(typeof user.created_at === 'number' && user.created_at > 0
-        ? { created_at: user.created_at }
-        : {}),
-    }),
-  }
+  useEffect(() => {
+    if (!appId) return
 
-  Intercom(payload)
+    const email = user ? intercomIdentityEmail(user) : undefined
+    const payload: Parameters<typeof Intercom>[0] = {
+      app_id: appId,
+      hide_default_launcher: true,
+      ...(user && {
+        user_id: String(user.id),
+        name: (user.name ?? user.username) || undefined,
+        ...(email ? { email } : {}),
+        ...(typeof user.created_at === 'number' && user.created_at > 0
+          ? { created_at: user.created_at }
+          : {}),
+      }),
+    }
+
+    Intercom(payload)
+  }, [appId, user])
+
   return null
 }

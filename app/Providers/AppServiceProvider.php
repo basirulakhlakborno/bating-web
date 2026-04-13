@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Services\SiteLayoutData;
 use App\Support\JwtToken;
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -19,6 +20,14 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        RedirectIfAuthenticated::redirectUsing(function (Request $request): string {
+            if ($request->is('hakai/admin/login')) {
+                return route('admin.dashboard');
+            }
+
+            return '/';
+        });
+
         $this->registerRateLimiters();
 
         View::composer(
@@ -144,7 +153,7 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('admin', function (Request $request): Limit {
             $n = max(120, (int) config('rate_limiting.admin_per_minute', 400));
-            $uid = $request->user()?->getAuthIdentifier();
+            $uid = $request->user('admin')?->getAuthIdentifier();
 
             return Limit::perMinute($n)->by('admin:'.($uid !== null ? 'u:'.$uid : 'ip:'.$request->ip()));
         });

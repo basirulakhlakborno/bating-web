@@ -18,7 +18,23 @@ class NavigationAdminController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        return view('admin.navigation.index', compact('items'));
+        $desktopItems = $items->where('placement', 'desktop_nav');
+        $drawerGroups = $items->where('placement', 'drawer')->groupBy('drawer_group');
+
+        return view('admin.navigation.index', compact('desktopItems', 'drawerGroups'));
+    }
+
+    public function create(): View
+    {
+        return view('admin.navigation.create');
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $this->validateNav($request);
+        NavigationItem::create($data);
+
+        return redirect()->route('admin.navigation.index')->with('status', 'Menu link added.');
     }
 
     public function edit(NavigationItem $item): View
@@ -28,14 +44,29 @@ class NavigationAdminController extends Controller
 
     public function update(Request $request, NavigationItem $item): RedirectResponse
     {
+        $data = $this->validateNav($request);
+        $item->update($data);
+
+        return redirect()->route('admin.navigation.index')->with('status', 'Menu link updated.');
+    }
+
+    public function destroy(NavigationItem $item): RedirectResponse
+    {
+        $item->delete();
+
+        return redirect()->route('admin.navigation.index')->with('status', 'Menu link removed.');
+    }
+
+    private function validateNav(Request $request): array
+    {
         $data = $request->validate([
             'label_bn' => ['required', 'string', 'max:255'],
             'label_en' => ['nullable', 'string', 'max:255'],
             'href' => ['required', 'string', 'max:512'],
             'icon_path' => ['nullable', 'string', 'max:512'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:65535'],
-            'badge_variant' => ['required', 'string', 'max:16'],
-            'label_class' => ['required', 'string', 'max:128'],
+            'badge_variant' => ['nullable', 'string', 'max:16'],
+            'label_class' => ['nullable', 'string', 'max:128'],
             'placement' => ['required', 'string', 'max:32'],
             'drawer_group' => ['nullable', 'string', 'max:32'],
             'drawer_meta_json' => ['nullable', 'string'],
@@ -54,8 +85,6 @@ class NavigationAdminController extends Controller
         $data['show_underline'] = $request->boolean('show_underline');
         $data['sort_order'] = (int) ($data['sort_order'] ?? 0);
 
-        $item->update($data);
-
-        return redirect()->route('admin.navigation.index')->with('status', 'Navigation item updated.');
+        return $data;
     }
 }

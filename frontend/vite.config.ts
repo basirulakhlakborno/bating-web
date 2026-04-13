@@ -9,6 +9,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: '../public/dist',
     emptyOutDir: true,
+    manifest: true,
   },
   plugins: [
     react(),

@@ -44,6 +44,22 @@ main {
   color: #000 !important;
 }
 
+/* Home hot games: label under tile (tiles are wrapped in links; force readable black title) */
+.desktop-provider-card-item .hot-game-title {
+  color: #000 !important;
+}
+
+/* Home referral promo: slightly smaller intro than legacy Vuetify headline scale */
+.home-referral-intro-bn {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+@media (min-width: 960px) {
+  .home-referral-intro-bn {
+    font-size: 0.875rem;
+  }
+}
+
 /* Home announcement marquee — seamless loop (two identical segments, animate track -50%) */
 .home-banner-box .marquee {
   display: flex !important;
@@ -126,9 +142,62 @@ main {
   line-height: 1.35;
 }
 
+/* Header logos: scale down when column is narrow or image is huge */
+.header-logo-col {
+  min-width: 0;
+}
+.header-logo-link {
+  display: block;
+  max-width: 100%;
+}
 .desktop-header-logo-img {
+  display: block;
+  float: left;
   max-width: min(312px, 100%);
+  max-height: min(58px, 10vw);
+  width: auto;
   height: auto;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.mobile-header-logo-img {
+  display: block;
+  max-width: min(215px, 100%);
+  max-height: min(45px, 9vw);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.drawer-menu-logo-img {
+  display: block;
+  max-width: min(180px, calc(100% - 8px));
+  max-height: 36px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.footer-brand-logo {
+  display: block;
+  max-width: min(180px, 100%);
+  max-height: 56px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+@media (max-width: 599px) {
+  .mobile-header-logo-img {
+    max-width: 100%;
+    max-height: 40px;
+  }
+  .footer-brand-logo {
+    max-width: min(140px, 85vw);
+    max-height: 48px;
+  }
 }
 
 .header-auth-actions {
@@ -156,7 +225,8 @@ main {
 
 @media (max-width: 1320px) {
   .desktop-header-logo-img {
-    max-width: 250px;
+    max-width: min(250px, 100%);
+    max-height: 52px;
   }
   .header-auth-username {
     max-width: 92px;
@@ -170,6 +240,10 @@ main {
 }
 
 @media (max-width: 1160px) {
+  .desktop-header-logo-img {
+    max-width: min(200px, 100%);
+    max-height: 48px;
+  }
   .header-auth-username {
     max-width: 72px;
   }

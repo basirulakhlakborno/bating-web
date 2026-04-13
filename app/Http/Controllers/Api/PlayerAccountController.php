@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\ResolvesJwtUser;
 use App\Http\Controllers\Controller;
+use App\Models\AdminMessage;
 use App\Models\User;
 use App\Models\UserDeposit;
 use App\Models\UserWithdrawal;
@@ -58,7 +59,6 @@ class PlayerAccountController extends Controller
         return response()->json(['message' => 'পাসওয়ার্ড আপডেট হয়েছে।']);
     }
 
-    /** Inbox / notices — extend with DB later; empty by default. */
     public function inbox(Request $request): JsonResponse
     {
         $user = $this->resolveBearerUser($request);
@@ -66,41 +66,27 @@ class PlayerAccountController extends Controller
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
-        $messages = [];
-        $notices = [];
+        $dbMessages = AdminMessage::query()
+            ->where('user_id', $user->id)
+            ->latest('sent_at')
+            ->limit(100)
+            ->get();
+
+        $messages = $dbMessages->map(fn (AdminMessage $m) => [
+            'id' => $m->id,
+            'title' => $m->title,
+            'body' => $m->body,
+            'read' => $m->is_read,
+            'sent_at' => $m->sent_at?->toIso8601String(),
+        ])->values()->toArray();
+
+        $unread = $dbMessages->where('is_read', false)->count();
 
         return response()->json([
             'messages' => $messages,
-            'notices' => $notices,
-            'unread_count' => $this->countInboxUnread($messages, $notices),
+            'notices' => [],
+            'unread_count' => $unread,
         ]);
-    }
-
-    /**
-     * @param  list<array<string, mixed>>  $messages
-     * @param  list<array<string, mixed>>  $notices
-     */
-    private function countInboxUnread(array $messages, array $notices): int
-    {
-        $n = 0;
-        foreach ($messages as $row) {
-            if (! is_array($row)) {
-                continue;
-            }
-            if (! (bool) ($row['read'] ?? false)) {
-                $n++;
-            }
-        }
-        foreach ($notices as $row) {
-            if (! is_array($row)) {
-                continue;
-            }
-            if (! (bool) ($row['read'] ?? false)) {
-                $n++;
-            }
-        }
-
-        return $n;
     }
 
     public function withdraw(Request $request): JsonResponse

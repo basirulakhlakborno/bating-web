@@ -10,9 +10,19 @@ use Illuminate\View\View;
 
 class UserAdminController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $users = User::query()->orderByDesc('id')->limit(200)->get();
+        $query = User::query()->orderByDesc('id');
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->paginate(50)->withQueryString();
 
         return view('admin.users.index', compact('users'));
     }
@@ -20,12 +30,8 @@ class UserAdminController extends Controller
     public function updateRole(Request $request, User $user): RedirectResponse
     {
         $request->validate([
-            'role' => ['required', 'in:user,admin'],
+            'role' => ['required', 'in:user'],
         ]);
-
-        if ($user->id === $request->user()->id && $request->input('role') !== 'admin') {
-            return redirect()->back()->withErrors(['role' => 'You cannot remove your own admin role.']);
-        }
 
         $user->update(['role' => $request->input('role')]);
 

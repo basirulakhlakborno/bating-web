@@ -1,39 +1,60 @@
 @extends('admin.layout')
 
-@section('title', 'Users')
+@section('pretitle', 'Users')
+@section('title', 'Players')
+
+@section('actions')
+    <form action="{{ route('admin.users.index') }}" method="get" class="d-flex gap-2">
+        <input type="text" name="search" class="form-control form-control-sm" value="{{ request('search') }}" placeholder="Search username, email or phone…" style="min-width:220px">
+        <button type="submit" class="btn btn-sm btn-primary">Search</button>
+        @if (request('search'))
+            <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
+        @endif
+    </form>
+@endsection
 
 @section('content')
-    <h1>Users</h1>
-    <table>
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Update role</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach ($users as $user)
-            <tr>
-                <td>{{ $user->id }}</td>
-                <td>{{ $user->username }}</td>
-                <td>{{ $user->email }}</td>
-                <td>{{ $user->role }}</td>
-                <td>
-                    <form action="{{ route('admin.users.role', $user) }}" method="post" class="row-actions">
-                        @csrf
-                        @method('PATCH')
-                        <select name="role">
-                            <option value="user" @selected($user->role === 'user')>user</option>
-                            <option value="admin" @selected($user->role === 'admin')>admin</option>
-                        </select>
-                        <button type="submit" class="btn" style="padding:4px 10px;">Save</button>
-                    </form>
-                </td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Phone</th>
+                    <th>Balance</th>
+                    <th>Joined</th>
+                    <th class="w-1"></th>
+                </tr>
+                </thead>
+                <tbody>
+                @forelse ($users as $user)
+                    <tr>
+                        <td class="text-secondary">{{ $user->id }}</td>
+                        <td class="fw-medium">{{ $user->username }}</td>
+                        <td class="text-secondary">{{ $user->phone ?? '—' }}</td>
+                        <td class="fw-medium">৳{{ number_format($user->balance, 2) }}</td>
+                        <td class="text-secondary">{{ $user->created_at?->format('d M Y') }}</td>
+                        <td>
+                            <span class="badge bg-secondary-lt">{{ $user->role }}</span>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center text-secondary py-4">
+                            @if (request('search'))
+                                No players matching "{{ request('search') }}".
+                            @else
+                                No players have registered yet.
+                            @endif
+                        </td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if ($users->hasPages())
+            <div class="card-footer d-flex justify-content-center">{{ $users->links() }}</div>
+        @endif
+    </div>
 @endsection

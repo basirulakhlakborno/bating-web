@@ -2,28 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\SiteLayoutData;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Illuminate\View\View;
 
 /**
- * Serves the Vite-built React SPA (`public/dist/index.html`) for all guest/player GET routes.
- * Run `npm run build` in `/frontend`; assets live under `/dist/*`.
+ * Serves the React SPA via a Blade template that reads the Vite manifest
+ * and injects server-side data (site title, footer, nav, CSRF token, etc.).
  */
 class SpaController extends Controller
 {
-    private function indexPath(): string
-    {
-        return public_path('dist/index.html');
-    }
-
-    public function __invoke(Request $request): BinaryFileResponse|\Illuminate\Http\Response
+    public function __invoke(Request $request): View|\Illuminate\Http\Response
     {
         if (! $request->isMethod('GET')) {
             abort(405);
         }
 
-        $path = $this->indexPath();
-        if (! is_file($path)) {
+        $manifestPath = public_path('dist/.vite/manifest.json');
+        if (! is_file($manifestPath)) {
             return response(
                 'SPA not built. From the frontend folder run: npm ci && npm run build',
                 503,
@@ -31,9 +27,10 @@ class SpaController extends Controller
             );
         }
 
-        return response()->file($path, [
-            'Content-Type' => 'text/html; charset=UTF-8',
-            'Cache-Control' => 'no-cache, private',
+        $siteData = SiteLayoutData::shared();
+
+        return view('spa', [
+            'siteData' => $siteData,
         ]);
     }
 }

@@ -1,4 +1,0 @@
-# Paths as used in the browser (babu88.gold + path). Saved under public/...
-/static/image/country/INR.svg
-/static/image/country/NPR.svg
-/static/image/country/PKR.svg

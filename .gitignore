@@ -7,6 +7,10 @@ __pycache__/
 .env.production
 .env.local
 .deploy_ftp_manifest.json
+/scripts/ftp-deploy.config.ps1
+/scripts/ftp_deploy_config.ini
+.zip_incremental_manifest.json
+/dist-zips
 .phpactor.json
 .phpunit.result.cache
 .phpstan

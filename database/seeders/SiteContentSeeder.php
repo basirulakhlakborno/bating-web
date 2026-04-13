@@ -12,18 +12,43 @@ use App\Models\PaymentMethod;
 use App\Models\SiteSetting;
 use App\Models\SocialLink;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class SiteContentSeeder extends Seeder
 {
+    private const SEED_FLAG_KEY = 'site_content_seeded_v1';
+
     public function run(): void
     {
-        $this->seedSiteSettings();
-        $this->seedNavigationDesktop();
-        $this->seedNavigationDrawer();
-        $this->seedFooter();
-        $this->seedPaymentsAndSocial();
-        $this->seedGameCategoriesAndGames();
-        $this->seedMediaAssets();
+        if (SiteSetting::query()->where('key', self::SEED_FLAG_KEY)->where('value', '1')->exists()) {
+            return;
+        }
+
+        // Legacy DBs seeded before the flag existed: skip if core layout rows are already present.
+        if (NavigationItem::query()->exists() && FooterSection::query()->exists()) {
+            SiteSetting::query()->updateOrCreate(
+                ['key' => self::SEED_FLAG_KEY],
+                ['value' => '1']
+            );
+
+            return;
+        }
+
+        // All-or-nothing: if any step fails, nothing is left half-inserted (avoids duplicate errors on re-seed).
+        DB::transaction(function (): void {
+            $this->seedSiteSettings();
+            $this->seedNavigationDesktop();
+            $this->seedNavigationDrawer();
+            $this->seedFooter();
+            $this->seedPaymentsAndSocial();
+            $this->seedGameCategoriesAndGames();
+            $this->seedMediaAssets();
+
+            SiteSetting::query()->updateOrCreate(
+                ['key' => self::SEED_FLAG_KEY],
+                ['value' => '1']
+            );
+        });
     }
 
     protected function seedSiteSettings(): void
@@ -43,6 +68,55 @@ class SiteContentSeeder extends Seeder
         SiteSetting::query()->updateOrCreate(
             ['key' => 'brand_copyright_bn'],
             ['value' => 'কপিরাইট © 2026 [ ব্র্যান্ড]। সমস্ত অধিকার সংরক্ষিত']
+        );
+        SiteSetting::query()->updateOrCreate(
+            ['key' => 'intercom_app_id'],
+            ['value' => 'jyk27uux']
+        );
+        SiteSetting::query()->updateOrCreate(
+            ['key' => 'brand_header_logo_path'],
+            ['value' => '/static/svg/bb88_logo_animation2.gif']
+        );
+        SiteSetting::query()->updateOrCreate(
+            ['key' => 'brand_drawer_logo_path'],
+            ['value' => '/static/svg/babu88_logo_black.svg']
+        );
+        SiteSetting::query()->updateOrCreate(
+            ['key' => 'site_html_title'],
+            ['value' => config('app.name', 'Babu88').' | Premium Cricket Exchange | Online Live Casino Bangladesh']
+        );
+        SiteSetting::query()->updateOrCreate(
+            ['key' => 'site_meta_description'],
+            ['value' => 'Register and experience the best Cricket Exchange in Bangladesh with 24/7 Service.']
+        );
+        SiteSetting::query()->updateOrCreate(
+            ['key' => 'site_meta_keywords'],
+            ['value' => 'cricket exchange, best cricket exchange, cricket betting']
+        );
+        SiteSetting::query()->updateOrCreate(
+            ['key' => 'site_og_image'],
+            ['value' => '/static/image/logo/logo.webp']
+        );
+        SiteSetting::query()->updateOrCreate(
+            ['key' => 'site_loader_aria_label'],
+            ['value' => 'Loading']
+        );
+
+        SiteSetting::query()->updateOrCreate(
+            ['key' => 'home_referral_headline_en'],
+            ['value' => 'Refer friends and start earning']
+        );
+        SiteSetting::query()->updateOrCreate(
+            ['key' => 'home_referral_body_bn'],
+            ['value' => base64_decode('4Kas4Ka+4KaC4Kay4Ka+4Kam4KeH4Ka24KeH4KawIOCmqOCmgiDgp6cg4Kar4KeN4Kaw4KeH4Kao4KeN4KahIOCmsOCnh+Cmq+CmvuCmsOCnh+CmsiDgpqrgp43gprDgp4vgppfgp43gprDgpr7gpq4g4KaP4KaW4KaoIOCmj+CmluCmvuCmqOCnhyEg4KaP4KaV4Kac4KaoIOCmrOCmqOCnjeCmp+CngeCmleCnhyDgprDgp4fgpqvgpr7gprAg4KaV4Kaw4Kay4KeHIOCmq+CnjeCmsOCmvyDgp7Pgp6vgp6bgp6Yg4KaJ4Kaq4Ka+4Kaw4KeN4Kac4KaoIOCmleCmsOCngeCmqCDgpo/gpqzgpoIg4KaG4Kaq4Kao4Ka+4KawIOCmrOCmqOCnjeCmp+CngSDgpqrgp43gprDgpqTgpr/gpqzgpr7gprAg4Kac4Kau4Ka+IOCmpuCmv+CmsuCnhyDgpobgppzgp4Dgpqzgpqgg4Ka44Kaw4KeN4Kas4KeL4Kaa4KeN4KaaIOCnqCUg4KaV4Kau4Ka/4Ka24KaoIOCmquCmvuCmqCE=', true)]
+        );
+        SiteSetting::query()->updateOrCreate(
+            ['key' => 'home_referral_mobile_section_bn'],
+            ['value' => 'প্রচার']
+        );
+        SiteSetting::query()->updateOrCreate(
+            ['key' => 'home_referral_mobile_headline_en'],
+            ['value' => 'Refer and earn with BABU88']
         );
 
         SiteSetting::query()->updateOrCreate(
@@ -236,9 +310,6 @@ class SiteContentSeeder extends Seeder
     {
         $categories = [
             ['slot', 'স্লট গেম', 'Slots', 1],
-            ['casino', 'ক্যাসিনো', 'Casino', 2],
-            ['crash', 'ক্র্যাশ', 'Crash', 3],
-            ['cricket', 'ক্রিকেট', 'Cricket', 4],
         ];
 
         $catModels = [];
@@ -253,9 +324,6 @@ class SiteContentSeeder extends Seeder
 
         $games = [
             ['slot', 'Fortune Gems', 'fortune-gems', 'JILI', '/static/image/logo/logo.webp', '/slot', 1, true],
-            ['slot', 'Super Ace', 'super-ace', 'JILI', '/static/image/logo/logo.webp', '/slot', 2, true],
-            ['casino', 'Live Baccarat', 'live-baccarat', 'Evolution', '/static/image/logo/logo.webp', '/casino', 1, true],
-            ['crash', 'Aviator Style', 'aviator-style', 'SPRIBE', '/static/image/logo/logo.webp', '/crash', 1, false],
         ];
 
         foreach ($games as $g) {

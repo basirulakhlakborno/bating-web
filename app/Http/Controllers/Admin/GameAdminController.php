@@ -7,6 +7,7 @@ use App\Models\Game;
 use App\Models\GameCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -50,6 +51,7 @@ class GameAdminController extends Controller
 
     public function destroy(Game $game): RedirectResponse
     {
+        $this->deleteStoredThumbnail($game->thumbnail_path);
         $game->delete();
 
         return redirect()->route('admin.games.index')->with('status', 'Game deleted.');
@@ -68,13 +70,50 @@ class GameAdminController extends Controller
             'slug' => ['required', 'string', 'max:255', $slugRule],
             'provider' => ['nullable', 'string', 'max:255'],
             'thumbnail_path' => ['nullable', 'string', 'max:512'],
+            'thumbnail' => ['nullable', 'image', 'mimes:jpeg,png,gif,webp', 'max:4096'],
+            'remove_thumbnail' => ['nullable', 'boolean'],
             'href' => ['nullable', 'string', 'max:512'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:65535'],
         ]);
+
         $data['is_active'] = $request->boolean('is_active');
         $data['is_featured'] = $request->boolean('is_featured');
         $data['sort_order'] = (int) ($data['sort_order'] ?? 0);
 
+        unset($data['thumbnail'], $data['remove_thumbnail']);
+
+        if ($request->hasFile('thumbnail')) {
+            if ($game !== null) {
+                $this->deleteStoredThumbnail($game->thumbnail_path);
+            }
+            $stored = $request->file('thumbnail')->store('game-thumbnails', 'public');
+            $data['thumbnail_path'] = '/storage/'.$stored;
+        } elseif ($request->boolean('remove_thumbnail') && $game !== null) {
+            $this->deleteStoredThumbnail($game->thumbnail_path);
+            $data['thumbnail_path'] = null;
+        } else {
+            $trimmed = trim((string) ($request->input('thumbnail_path') ?? ''));
+            if ($trimmed === '' && $game !== null && ! $request->boolean('remove_thumbnail')) {
+                $data['thumbnail_path'] = $game->thumbnail_path;
+            } else {
+                $data['thumbnail_path'] = $trimmed !== '' ? $trimmed : null;
+            }
+        }
+
         return $data;
+    }
+
+    private function deleteStoredThumbnail(?string $path): void
+    {
+        if ($path === null || $path === '') {
+            return;
+        }
+        if (! str_starts_with($path, '/storage/')) {
+            return;
+        }
+        $relative = ltrim(substr($path, strlen('/storage/')), '/');
+        if ($relative !== '') {
+            Storage::disk('public')->delete($relative);
+        }
     }
 }
