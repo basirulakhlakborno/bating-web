@@ -24,6 +24,10 @@ class GameEmbedController extends Controller
             return response('Game URL not configured.', 503, ['Content-Type' => 'text/plain']);
         }
 
+        // cPanel/shared hosting blocks URLs containing /laravel/ (ModSecurity).
+        // The parent directory's index.php serves the same Laravel app, so strip the suffix.
+        $base = preg_replace('#/laravel/public$#', '', $base);
+
         $bridge = trim((string) ($game->iframe_bridge_path ?: 'game-bridge'), '/');
         if ($bridge === '') {
             $bridge = 'game-bridge';
