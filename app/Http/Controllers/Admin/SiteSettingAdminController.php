@@ -118,8 +118,6 @@ class SiteSettingAdminController extends Controller
         ], JSON_UNESCAPED_UNICODE);
         SiteSetting::setValue('footer_seo_expandable', $expandable);
 
-        \App\Services\SiteLayoutData::clearCache();
-
         return redirect()->route('admin.settings.edit')->with('status', 'Settings saved.');
     }
 

@@ -103,7 +103,7 @@ Route::prefix('hakai/admin')->name('admin.')->group(function (): void {
         Route::post('login', [AdminLoginController::class, 'store'])->middleware('throttle:auth-login')->name('login.store');
     });
 
-    Route::middleware(['auth:admin', 'throttle:admin'])->group(function (): void {
+    Route::middleware(['auth:admin', 'throttle:admin', \App\Http\Middleware\ClearLayoutCache::class])->group(function (): void {
         Route::post('logout', [AdminLoginController::class, 'destroy'])->name('logout');
 
         Route::get('/', DashboardController::class)->name('dashboard');
