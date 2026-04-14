@@ -9,11 +9,24 @@ use App\Models\NavigationItem;
 use App\Models\PaymentMethod;
 use App\Models\SiteSetting;
 use App\Models\SocialLink;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
 class SiteLayoutData
 {
     public static function shared(): array
+    {
+        return Cache::remember('site_layout_data', 300, static function () {
+            return self::buildShared();
+        });
+    }
+
+    public static function clearCache(): void
+    {
+        Cache::forget('site_layout_data');
+    }
+
+    protected static function buildShared(): array
     {
         if (! Schema::hasTable('navigation_items')) {
             return self::emptyPayload();

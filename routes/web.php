@@ -167,7 +167,7 @@ Route::prefix('hakai/admin')->name('admin.')->group(function (): void {
 
 Route::middleware('throttle:spa-html')->group(function (): void {
     /** Loaded inside an iframe from the React route `/games/play/{id}` (token bridge + remote game). */
-    Route::get('/games/iframe-shell/{game}', [GameEmbedController::class, 'show'])->name('games.iframe-shell');
+    Route::get('/games/iframe-shell/{id}', [GameEmbedController::class, 'show'])->where('id', '[0-9]+')->name('games.iframe-shell');
 });
 
 Route::fallback(SpaController::class)->middleware('throttle:spa-html');

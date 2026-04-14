@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Game;
-use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class GameEmbedController extends Controller
 {
-    public function show(Game $game): View
+    public function show(Request $request, int $id): Response|\Illuminate\Contracts\View\View
     {
-        if (! $game->is_active || ! $game->opens_in_iframe) {
-            abort(404);
+        $game = Game::find($id);
+
+        if (! $game || ! $game->is_active || ! $game->opens_in_iframe) {
+            return response('Game not available.', 404, ['Content-Type' => 'text/plain']);
         }
 
         $base = rtrim((string) $game->iframe_remote_base, '/');
@@ -18,7 +21,7 @@ class GameEmbedController extends Controller
             $base = rtrim((string) config('services.aviator.public_url', ''), '/');
         }
         if ($base === '') {
-            abort(503, 'Remote game URL is not set. Add AVIATOR_PUBLIC_URL to .env or set “Remote game base URL” on this game in admin.');
+            return response('Game URL not configured.', 503, ['Content-Type' => 'text/plain']);
         }
 
         $bridge = trim((string) ($game->iframe_bridge_path ?: 'game-bridge'), '/');
@@ -26,7 +29,6 @@ class GameEmbedController extends Controller
             $bridge = 'game-bridge';
         }
 
-        /** Full URL to the remote game bridge (no query string). */
         $gameBridgeUrl = $base.'/'.ltrim($bridge, '/');
 
         return view('games.play-embed', [
