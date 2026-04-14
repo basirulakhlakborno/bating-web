@@ -24,6 +24,9 @@ DirectoryIndex index.php index.html
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
+    # Aviator game sub-app has its own Laravel instance; let its own .htaccess handle routing
+    RewriteRule ^games/avitorjetx/ - [L]
+
     # Map / and /path → public/ (front controller, assets, public/storage)
     RewriteRule ^(.*)$ public/$1 [L,QSA]
 </IfModule>
