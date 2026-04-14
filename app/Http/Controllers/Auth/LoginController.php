@@ -52,6 +52,12 @@ class LoginController extends Controller
                 'sub' => (string) $user?->getAuthIdentifier(),
                 'username' => (string) ($user?->username ?? ''),
                 'role' => (string) ($user?->role ?? 'user'),
+                'email' => (string) ($user?->email ?? ''),
+                'name' => (string) ($user?->name ?? ''),
+                'phone' => (string) ($user?->phone ?? ''),
+                'balance' => (string) ($user?->balance ?? '0'),
+                'currency_code' => (string) ($user?->currency_code ?? 'BDT'),
+                'currency_symbol' => (string) ($user instanceof \App\Models\User ? $user->currencySymbol() : '৳'),
             ], $ttl);
 
             return response()->json([

@@ -30,7 +30,9 @@ class GameAdminController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validated($request, null);
-        Game::query()->create($data);
+        /** @var Game $game */
+        $game = Game::query()->create($data);
+        $this->syncIframePlayHref($game);
 
         return redirect()->route('admin.games.index')->with('status', 'Game created.');
     }
@@ -45,6 +47,8 @@ class GameAdminController extends Controller
     public function update(Request $request, Game $game): RedirectResponse
     {
         $game->update($this->validated($request, $game));
+        $game->refresh();
+        $this->syncIframePlayHref($game);
 
         return redirect()->route('admin.games.index')->with('status', 'Game updated.');
     }
@@ -73,11 +77,19 @@ class GameAdminController extends Controller
             'thumbnail' => ['nullable', 'image', 'mimes:jpeg,png,gif,webp', 'max:4096'],
             'remove_thumbnail' => ['nullable', 'boolean'],
             'href' => ['nullable', 'string', 'max:512'],
+            'opens_in_iframe' => ['nullable', 'boolean'],
+            'iframe_remote_base' => ['nullable', 'string', 'max:512'],
+            'iframe_bridge_path' => ['nullable', 'string', 'max:255'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:65535'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active');
         $data['is_featured'] = $request->boolean('is_featured');
+        $data['opens_in_iframe'] = $request->boolean('opens_in_iframe');
+        $trimRemote = trim((string) ($data['iframe_remote_base'] ?? ''));
+        $data['iframe_remote_base'] = $trimRemote !== '' ? rtrim($trimRemote, '/') : null;
+        $trimBridge = trim((string) ($data['iframe_bridge_path'] ?? ''));
+        $data['iframe_bridge_path'] = $trimBridge !== '' ? $trimBridge : null;
         $data['sort_order'] = (int) ($data['sort_order'] ?? 0);
 
         unset($data['thumbnail'], $data['remove_thumbnail']);
@@ -101,6 +113,20 @@ class GameAdminController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * Iframe titles always open at /games/play/{id} on this app (token bridge loads inside the frame).
+     */
+    private function syncIframePlayHref(Game $game): void
+    {
+        if (! $game->opens_in_iframe) {
+            return;
+        }
+        $expected = '/games/play/'.$game->id;
+        if ($game->href !== $expected) {
+            $game->forceFill(['href' => $expected])->save();
+        }
     }
 
     private function deleteStoredThumbnail(?string $path): void

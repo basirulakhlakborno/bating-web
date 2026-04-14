@@ -807,6 +807,11 @@ main {
   line-height: 1;
   padding: 4px 8px;
 }
+@media (min-width: 769px) {
+  .download-bar.mobile-only {
+    display: none !important;
+  }
+}
 .download-bar-button.v-btn {
   background-color: #ebbe01 !important;
   border-color: #ebbe01 !important;

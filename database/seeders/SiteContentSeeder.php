@@ -37,11 +37,11 @@ class SiteContentSeeder extends Seeder
         // All-or-nothing: if any step fails, nothing is left half-inserted (avoids duplicate errors on re-seed).
         DB::transaction(function (): void {
             $this->seedSiteSettings();
-            $this->seedNavigationDesktop();
-            $this->seedNavigationDrawer();
+            $crashPlayHref = $this->seedGameCategoriesAndGames();
+            $this->seedNavigationDesktop($crashPlayHref);
+            $this->seedNavigationDrawer($crashPlayHref);
             $this->seedFooter();
             $this->seedPaymentsAndSocial();
-            $this->seedGameCategoriesAndGames();
             $this->seedMediaAssets();
 
             SiteSetting::query()->updateOrCreate(
@@ -150,12 +150,13 @@ class SiteContentSeeder extends Seeder
         );
     }
 
-    protected function seedNavigationDesktop(): void
+    protected function seedNavigationDesktop(?string $crashPlayHref = null): void
     {
+        $crashHref = $crashPlayHref ?? '/crash';
         $rows = [
             ['স্লট গেম', '/slot', 1, 'menu-navigator px-1', 'dot', true, true, false],
             ['ক্যাসিনো', '/casino', 2, 'menu-navigator px-1', 'dot', true, true, false],
-            ['ক্র্যাশ', '/crash', 3, 'menu-navigator px-1', 'dot', true, true, false],
+            ['ক্র্যাশ', $crashHref, 3, 'menu-navigator px-1', 'dot', true, true, false],
             ['ক্রিকেট', '/cricket', 4, 'menu-navigator px-1', 'dot', true, true, false],
             ['টেবিল গেম', '/tablegames', 5, 'menu-navigator px-1', 'dot', true, true, false],
             ['ফাস্ট', '/fastgames', 6, 'menu-navigator px-1', 'dot', true, true, false],
@@ -185,8 +186,9 @@ class SiteContentSeeder extends Seeder
         }
     }
 
-    protected function seedNavigationDrawer(): void
+    protected function seedNavigationDrawer(?string $crashPlayHref = null): void
     {
+        $crashHref = $crashPlayHref ?? '/crash';
         $top = [
             ['প্রমোশন', '/promotion', 1, '/static/svg/mobileMenu/icon_promotion.svg', 'top', [], false],
             ['পুরস্কার', '/reward/rewardStore', 2, '/static/svg/mobileMenu/icon_rewards.svg', 'top', ['badge' => 'নতুন', 'badge_bg' => 'rgb(4, 178, 43)'], false],
@@ -200,7 +202,7 @@ class SiteContentSeeder extends Seeder
         $games = [
             ['স্লট গেম', '/slot/jili', 1, '/static/svg/mobileMenu/icon_rng.svg', 'games', [], false],
             ['ক্যাসিনো', '/casino', 2, '/static/svg/mobileMenu/icon_ld.svg', 'games', [], false],
-            ['ক্র্যাশ', '/crash', 3, '/static/svg/mobileMenu/icon_crash.svg', 'games', [], false],
+            ['ক্র্যাশ', $crashHref, 3, '/static/svg/mobileMenu/icon_crash.svg', 'games', [], false],
             ['ক্রিকেট', '/cricket', 4, '/static/svg/mobileMenu/icon_cricket.svg', 'games', [], false],
             ['টেবিল গেম', '/tablegames', 5, '/static/svg/mobileMenu/icon_table.svg', 'games', [], false],
             ['ফাস্ট', '/fastgames', 6, '/static/svg/mobileMenu/icon_fastgames.svg', 'games', ['badge' => 'নতুন'], false],
@@ -306,10 +308,14 @@ class SiteContentSeeder extends Seeder
         }
     }
 
-    protected function seedGameCategoriesAndGames(): void
+    /**
+     * @return string|null Href for crash nav (e.g. /games/play/2) when iframe embed game is created
+     */
+    protected function seedGameCategoriesAndGames(): ?string
     {
         $categories = [
             ['slot', 'স্লট গেম', 'Slots', 1],
+            ['crash', 'ক্র্যাশ', 'Crash', 2],
         ];
 
         $catModels = [];
@@ -321,6 +327,23 @@ class SiteContentSeeder extends Seeder
                 'sort_order' => $c[3],
             ]);
         }
+
+        $embedBase = rtrim((string) config('services.aviator.public_url', ''), '/');
+        $iframeGame = Game::query()->create([
+            'game_category_id' => $catModels['crash']->id,
+            'title' => 'Aviator',
+            'slug' => 'aviator',
+            'provider' => null,
+            'thumbnail_path' => '/static/image/logo/logo.webp',
+            'href' => '/games/play/0',
+            'opens_in_iframe' => true,
+            'iframe_remote_base' => $embedBase !== '' ? $embedBase : null,
+            'iframe_bridge_path' => 'game-bridge',
+            'sort_order' => 0,
+            'is_featured' => true,
+            'is_active' => true,
+        ]);
+        $iframeGame->update(['href' => '/games/play/'.$iframeGame->id]);
 
         $games = [
             ['slot', 'Fortune Gems', 'fortune-gems', 'JILI', '/static/image/logo/logo.webp', '/slot', 1, true],
@@ -339,6 +362,8 @@ class SiteContentSeeder extends Seeder
                 'is_active' => true,
             ]);
         }
+
+        return '/games/play/'.$iframeGame->id;
     }
 
     protected function seedMediaAssets(): void

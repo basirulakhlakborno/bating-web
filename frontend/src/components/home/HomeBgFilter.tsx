@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState, type CSSProperties, type ReactNode } from 'react'
 import { homeGameMenuItems } from '../../config/homeGameMenu'
+import { normalizeInternalNavHref } from '../../config/navRouting'
 import type { FeaturedGame } from '../../hooks/useSiteLayout'
 import { useSiteLayout } from '../../hooks/useSiteLayout'
 import { HomeMatchesHighlights } from './HomeMatchesHighlights'
@@ -8,7 +9,7 @@ import { HomeReferralPromo } from './HomeReferralPromo'
 import { HomeDownloadWof } from './HomeDownloadWof'
 
 function FeaturedGameLink({ game, className, children }: { game: FeaturedGame; className?: string; children: ReactNode }) {
-  const href = game.href?.trim() ?? ''
+  const href = normalizeInternalNavHref(game.href?.trim() ?? '')
   if (!href) {
     return <div className={className}>{children}</div>
   }
@@ -29,6 +30,7 @@ function FeaturedGameLink({ game, className, children }: { game: FeaturedGame; c
 export function HomeBgFilter() {
   const site = useSiteLayout()
   const featuredGames = site?.layoutFeaturedGames ?? []
+  const iframePlayHref = site?.layoutIframeGamePlayHref?.trim() ?? ''
   const [activeMenu, setActiveMenu] = useState(() => homeGameMenuItems.findIndex((x) => x.defaultSelected))
 
   const providerLabel = (g: FeaturedGame) =>
@@ -40,25 +42,28 @@ export function HomeBgFilter() {
         <div>
           <div id="game-menu-full" className="row game-menu-wrapper pb-2 hidden-md-and-up game-menu-row no-gutters">
             <div className="d-flex pt-3 col col-12">
-              {homeGameMenuItems.map((item, idx) => (
-                <div key={item.title} className={idx === 0 ? 'mx-auto pl-3' : 'mx-auto'}>
-                  <Link
-                    to={item.to}
-                    className={`text-decoration-none v-card v-card--link v-sheet theme--light game-menu-button font-weight-bold subtitle-1${
-                      idx === activeMenu ? ' selected' : ''
-                    }`}
-                    onClick={() => setActiveMenu(idx)}
-                  >
-                    <div
-                      className="game-menu-image"
-                      style={{ ['--src' as never]: `url('${item.holder}')` } as CSSProperties}
+              {homeGameMenuItems.map((item, idx) => {
+                const resolvedTo = item.useIframeGameHref && iframePlayHref ? iframePlayHref : item.to
+                return (
+                  <div key={item.title} className={idx === 0 ? 'mx-auto pl-3' : 'mx-auto'}>
+                    <Link
+                      to={resolvedTo}
+                      className={`text-decoration-none v-card v-card--link v-sheet theme--light game-menu-button font-weight-bold subtitle-1${
+                        idx === activeMenu ? ' selected' : ''
+                      }`}
+                      onClick={() => setActiveMenu(idx)}
                     >
-                      <img src={item.icon} alt="" className="side-menu-icon" />
-                    </div>
-                    <div className="game-menu-title">{item.title}</div>
-                  </Link>
-                </div>
-              ))}
+                      <div
+                        className="game-menu-image"
+                        style={{ ['--src' as never]: `url('${item.holder}')` } as CSSProperties}
+                      >
+                        <img src={item.icon} alt="" className="side-menu-icon" />
+                      </div>
+                      <div className="game-menu-title">{item.title}</div>
+                    </Link>
+                  </div>
+                )
+              })}
             </div>
           </div>
 

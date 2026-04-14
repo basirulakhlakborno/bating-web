@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
-import { navPageEntries } from '../config/navPages'
-import { useSiteLayout } from '../hooks/useSiteLayout'
+import { useSiteLayout, type NavItem } from '../hooks/useSiteLayout'
 import { openIntercomMessenger } from '../lib/intercom'
+import { normalizeInternalNavHref } from '../config/navRouting'
 
 type Props = {
   open: boolean
@@ -9,35 +9,66 @@ type Props = {
   onLanguageClick: () => void
 }
 
-function DrawerLink({
-  to,
+function DrawerNavLink({
+  item,
   onNavigate,
-  children,
 }: {
-  to: string
+  item: NavItem
   onNavigate: () => void
-  children: React.ReactNode
 }) {
-  return (
-    <Link
-      to={to}
-      className="v-list-item v-list-item--link theme--light"
-      tabIndex={0}
-      role="option"
-      aria-selected="false"
-      onClick={onNavigate}
-    >
+  const href = normalizeInternalNavHref(item.href?.trim() ?? '#')
+  const isHttp = href.startsWith('http://') || href.startsWith('https://')
+  const external = Boolean(item.is_external) && isHttp
+  const cls = 'v-list-item v-list-item--link theme--light'
+  const icon = item.icon_path ? (
+    <div className="v-list-item__icon">
+      <span className="v-btn v-btn--icon v-btn--round theme--light v-size--small" style={{ marginLeft: -3, display: 'inline-flex', pointerEvents: 'none' }}>
+        <span className="v-btn__content">
+          <div className="v-avatar" style={{ height: 25, minWidth: 25, width: 25 }}>
+            <img src={item.icon_path} alt="" />
+          </div>
+        </span>
+      </span>
+    </div>
+  ) : null
+  const body = (
+    <>
+      {icon}
       <div className="v-list-item__content">
-        <div className="v-list-item__title">{children}</div>
+        <div className="v-list-item__title">{item.label_bn}</div>
       </div>
+    </>
+  )
+
+  if (isHttp) {
+    return (
+      <a
+        href={href}
+        className={cls}
+        tabIndex={0}
+        role="option"
+        aria-selected="false"
+        onClick={onNavigate}
+        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      >
+        {body}
+      </a>
+    )
+  }
+  return (
+    <Link to={href} className={cls} tabIndex={0} role="option" aria-selected="false" onClick={onNavigate}>
+      {body}
     </Link>
   )
 }
 
-/** Simplified `navigation-drawer.blade.php` — static links from `nav_pages`. */
+/** Drawer links from `navigation_items` (admin), grouped like production. */
 export function NavigationDrawer({ open, onClose, onLanguageClick }: Props) {
   const layout = useSiteLayout()
   const drawerLogoSrc = layout?.layoutSiteDrawerLogoPath ?? ''
+  const top = layout?.layoutDrawerTop ?? []
+  const games = layout?.layoutDrawerGames ?? []
+  const others = layout?.layoutDrawerOthers ?? []
 
   return (
     <aside
@@ -73,27 +104,35 @@ export function NavigationDrawer({ open, onClose, onLanguageClick }: Props) {
         <hr role="separator" aria-orientation="horizontal" className="my-4 mx-4 v-divider theme--light" />
         <div role="list" className="v-list pb-16 mobileMenuListItem v-sheet theme--light v-list--dense v-list--nav">
           <div role="listbox" className="v-item-group theme--light v-list-item-group">
-            <DrawerLink to="/" onNavigate={onClose}>
-              হোম
-            </DrawerLink>
-            {navPageEntries.slice(0, 6).map(([path, meta]) => (
-              <DrawerLink key={path} to={`/${path}`} onNavigate={onClose}>
-                {meta.heading}
-              </DrawerLink>
+            <Link
+              to="/"
+              className="v-list-item v-list-item--link theme--light"
+              tabIndex={0}
+              role="option"
+              aria-selected="false"
+              onClick={onClose}
+            >
+              <div className="v-list-item__content">
+                <div className="v-list-item__title">হোম</div>
+              </div>
+            </Link>
+            {top.map((item) => (
+              <DrawerNavLink key={item.id} item={item} onNavigate={onClose} />
             ))}
           </div>
           <hr role="separator" aria-orientation="horizontal" className="my-4 mx-4 v-divider theme--light" />
           <span className="mobile-drawer-itemgroup-title">Games</span>
           <div role="listbox" className="v-item-group theme--light v-list-item-group">
-            {navPageEntries.slice(6).map(([path, meta]) => (
-              <DrawerLink key={path} to={`/${path}`} onNavigate={onClose}>
-                {meta.heading}
-              </DrawerLink>
+            {games.map((item) => (
+              <DrawerNavLink key={item.id} item={item} onNavigate={onClose} />
             ))}
           </div>
           <hr role="separator" aria-orientation="horizontal" className="my-4 mx-4 v-divider theme--light" />
           <span className="mobile-drawer-itemgroup-title">Others</span>
           <div role="listbox" className="v-item-group theme--light v-list-item-group">
+            {others.map((item) => (
+              <DrawerNavLink key={item.id} item={item} onNavigate={onClose} />
+            ))}
             <div tabIndex={0} role="option" aria-selected="false" className="v-list-item v-list-item--link theme--light">
               <div className="v-list-item__icon">
                 <button
@@ -101,7 +140,7 @@ export function NavigationDrawer({ open, onClose, onLanguageClick }: Props) {
                   className="v-btn v-btn--icon v-btn--round theme--light v-size--small"
                   style={{ marginLeft: -3 }}
                   onClick={() => onLanguageClick()}
-                  aria-label="ভাষা — Currency and language"
+                  aria-label="Language — Currency and language"
                 >
                   <span className="v-btn__content">
                     <div className="v-avatar language-button" style={{ height: 25, minWidth: 25, width: 25 }}>
@@ -111,7 +150,7 @@ export function NavigationDrawer({ open, onClose, onLanguageClick }: Props) {
                 </button>
               </div>
               <div className="v-list-item__content">
-                <div className="v-list-item__title">ভাষা</div>
+                <div className="v-list-item__title">Language</div>
               </div>
             </div>
             <button
@@ -158,7 +197,7 @@ export function NavigationDrawer({ open, onClose, onLanguageClick }: Props) {
                 </button>
               </div>
               <div className="v-list-item__content">
-                <div className="v-list-item__title">ডাউনলোড করুন</div>
+                <div className="v-list-item__title">Download app</div>
               </div>
             </div>
           </div>

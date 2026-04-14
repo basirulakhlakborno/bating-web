@@ -12,6 +12,7 @@ import { ProfileChangePasswordPage } from './pages/ProfileChangePasswordPage'
 import { ProfileInboxPage } from './pages/ProfileInboxPage'
 import { ProfilePersonalPage } from './pages/ProfilePersonalPage'
 import { ReferralPage } from './pages/ReferralPage'
+import { GamePlayPage } from './pages/GamePlayPage'
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="profile/referral/history" element={<ReferralPage />} />
           <Route path="vip/vipProfile" element={<NavPage />} />
           <Route path="reward/rewardStore" element={<NavPage />} />
+          <Route path="games/play/:gameId" element={<GamePlayPage />} />
           <Route path="*" element={<NavPage />} />
         </Route>
       </Routes>

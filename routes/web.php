@@ -20,6 +20,7 @@ use App\Http\Controllers\Auth\RegisterCaptchaController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DepositApiController;
 use App\Http\Controllers\DepositWebhookController;
+use App\Http\Controllers\GameEmbedController;
 use App\Http\Controllers\ReferralApiController;
 use App\Http\Controllers\SpaController;
 use App\Services\SiteLayoutData;
@@ -162,6 +163,11 @@ Route::prefix('hakai/admin')->name('admin.')->group(function (): void {
         Route::get('users', [UserAdminController::class, 'index'])->name('users.index');
         Route::post('users/{user}/role', [UserAdminController::class, 'updateRole'])->name('users.role');
     });
+});
+
+Route::middleware('throttle:spa-html')->group(function (): void {
+    /** Loaded inside an iframe from the React route `/games/play/{id}` (token bridge + remote game). */
+    Route::get('/games/iframe-shell/{game}', [GameEmbedController::class, 'show'])->name('games.iframe-shell');
 });
 
 Route::fallback(SpaController::class)->middleware('throttle:spa-html');

@@ -1,6 +1,6 @@
 export function DownloadBar() {
   return (
-    <div className="row download-bar no-gutters">
+    <div className="row download-bar no-gutters mobile-only">
       <button type="button" className="v-icon notranslate mr-2 v-icon--link mdi mdi-close theme--light"></button>
       <img
         width={32}

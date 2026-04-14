@@ -67,6 +67,7 @@ class SiteLayoutData
             'layoutPaymentMethods' => $payments,
             'layoutSocialLinks' => $socials,
             'layoutFeaturedGames' => $featuredGames,
+            'layoutIframeGamePlayHref' => self::iframeGamePlayHref(),
             'layoutHomeMatches' => self::homeMatchHighlights(),
             'layoutSiteBrandOfficialUrl' => self::strSetting('brand_official_url'),
             'layoutSiteHeaderLogoPath' => self::publicAssetUrl(self::strSetting('brand_header_logo_path')),
@@ -87,6 +88,25 @@ class SiteLayoutData
             'layoutHomeReferralMobileSectionBn' => self::strSetting('home_referral_mobile_section_bn'),
             'layoutHomeReferralMobileHeadlineEn' => self::strSetting('home_referral_mobile_headline_en'),
         ];
+    }
+
+    /**
+     * First active iframe-embed game: full path for Laravel `/games/play/{id}` shell.
+     */
+    public static function iframeGamePlayHref(): string
+    {
+        if (! Schema::hasTable('games') || ! Schema::hasColumn('games', 'opens_in_iframe')) {
+            return '';
+        }
+
+        $id = Game::query()
+            ->where('is_active', true)
+            ->where('opens_in_iframe', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->value('id');
+
+        return $id ? '/games/play/'.$id : '';
     }
 
     /**
@@ -266,6 +286,7 @@ class SiteLayoutData
             'layoutPaymentMethods' => collect(),
             'layoutSocialLinks' => collect(),
             'layoutFeaturedGames' => collect(),
+            'layoutIframeGamePlayHref' => '',
             'layoutHomeMatches' => [],
             'layoutSiteBrandOfficialUrl' => '',
             'layoutSiteHeaderLogoPath' => '',

@@ -35,7 +35,7 @@ interface PaymentMethod {
   sort_order: number
 }
 
-interface NavItem {
+export interface NavItem {
   id: number
   label_bn: string
   href: string
@@ -56,6 +56,9 @@ export interface FeaturedGame {
   provider: string | null
   thumbnail_path: string | null
   href: string | null
+  opens_in_iframe?: boolean
+  iframe_remote_base?: string | null
+  iframe_bridge_path?: string | null
   sort_order: number
   is_active: boolean
   is_featured: boolean
@@ -98,6 +101,8 @@ export interface SiteLayout {
   layoutPaymentMethods: PaymentMethod[]
   layoutSocialLinks: SocialLink[]
   layoutFeaturedGames: FeaturedGame[]
+  /** First active iframe game: `/games/play/{id}` from DB. */
+  layoutIframeGamePlayHref: string
   layoutHomeMatches: HomeMatchCard[]
   layoutSiteBrandOfficialUrl: string
   layoutSiteHeaderLogoPath: string

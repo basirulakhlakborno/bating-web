@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    /** Aviator (crash) app — document root URL, no trailing slash. */
+    'aviator' => [
+        'public_url' => rtrim((string) env('AVIATOR_PUBLIC_URL', ''), '/'),
+    ],
+
 ];

@@ -1,5 +1,6 @@
 @php
     $g = $game;
+    $iframeOn = (bool) old('opens_in_iframe', $g?->opens_in_iframe ?? false);
     $thumbPath = old('thumbnail_path', $g?->thumbnail_path);
     $previewUrl = '';
     if ($thumbPath) {
@@ -85,10 +86,36 @@
     </div>
 </div>
 
+<div class="card mb-4 border-secondary border-opacity-25">
+    <div class="card-header bg-secondary bg-opacity-10">
+        <h3 class="card-title mb-0">Iframe embed (optional)</h3>
+        <div class="card-subtitle text-secondary mt-1">For games hosted on another URL (e.g. Aviator). Players stay on this site; the remote game loads inside a frame.</div>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <label class="form-check">
+                <input type="hidden" name="opens_in_iframe" value="0">
+                <input type="checkbox" name="opens_in_iframe" value="1" class="form-check-input" id="opens_in_iframe" @checked(old('opens_in_iframe', $g?->opens_in_iframe ?? false))>
+                <span class="form-check-label">Open inside iframe shell on this website</span>
+            </label>
+            <small class="form-hint d-block mt-1">When enabled, the player link is fixed to <code>/games/play/{{ $g?->id ?: '{id}' }}</code> after save.</small>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Remote game base URL</label>
+            <input type="text" name="iframe_remote_base" class="form-control" value="{{ old('iframe_remote_base', $g?->iframe_remote_base) }}" maxlength="512" placeholder="https://aviator.example.com (no trailing slash)">
+            <small class="form-hint">Document root of the game app; the bridge path is appended below.</small>
+        </div>
+        <div class="mb-0">
+            <label class="form-label">Bridge path <span class="text-secondary">(optional)</span></label>
+            <input type="text" name="iframe_bridge_path" class="form-control" value="{{ old('iframe_bridge_path', $g?->iframe_bridge_path ?? 'game-bridge') }}" maxlength="255" placeholder="game-bridge">
+        </div>
+    </div>
+</div>
+
 <div class="mb-3">
     <label class="form-label">Where the game opens</label>
-    <input type="text" name="href" class="form-control" value="{{ old('href', $g?->href) }}" maxlength="512" placeholder="e.g. /slot">
-    <small class="form-hint">The page that opens when someone taps this game.</small>
+    <input type="text" name="href" class="form-control" value="{{ old('href', $g?->href) }}" maxlength="512" placeholder="e.g. /slot" @disabled($iframeOn) id="game-href-input">
+    <small class="form-hint">The page that opens when someone taps this game. Locked when iframe mode is on.</small>
 </div>
 <div class="mb-3">
     <label class="form-label">Order in the list</label>
@@ -111,6 +138,13 @@
 @push('scripts')
 <script>
 (function () {
+    const iframeCb = document.getElementById('opens_in_iframe');
+    const hrefInput = document.getElementById('game-href-input');
+    if (iframeCb && hrefInput) {
+        iframeCb.addEventListener('change', function () {
+            hrefInput.disabled = iframeCb.checked;
+        });
+    }
     const input = document.getElementById('thumbnail-input');
     const dropzone = document.getElementById('thumb-dropzone');
     const browseBtn = document.getElementById('thumb-browse-btn');

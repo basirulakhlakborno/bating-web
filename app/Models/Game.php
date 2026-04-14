@@ -14,6 +14,9 @@ class Game extends Model
         'provider',
         'thumbnail_path',
         'href',
+        'opens_in_iframe',
+        'iframe_remote_base',
+        'iframe_bridge_path',
         'sort_order',
         'is_active',
         'is_featured',
@@ -25,6 +28,7 @@ class Game extends Model
             'sort_order' => 'integer',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'opens_in_iframe' => 'boolean',
         ];
     }
 

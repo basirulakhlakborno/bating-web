@@ -40,6 +40,7 @@ npm-debug.log*
 yarn-error.log*
 *.sqlite
 *.sqlite-journal
+games/avitorjetx/install/database.sql
 
 # XAMPP: duplicate static mirror at repo root; assets live in /public/static
 /static
