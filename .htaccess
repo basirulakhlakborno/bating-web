@@ -24,10 +24,11 @@ DirectoryIndex index.php index.html
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
-    # Aviator game sub-app: route dynamic requests through its own Laravel front controller.
-    # Static files are already served by the -f rule above.
+    # Aviator game sub-app: LiteSpeed blocks PHP in subdirectories, so route
+    # dynamic requests through public/aviator-bridge.php (static files still
+    # served directly by the -f rule above).
     RewriteCond %{REQUEST_URI} ^/games/avitorjetx/
-    RewriteRule ^games/avitorjetx/(.*)$ games/avitorjetx/index.php [L,QSA]
+    RewriteRule ^games/avitorjetx/ public/aviator-bridge.php [L,QSA]
 
     # Map / and /path → public/ (front controller, assets, public/storage)
     RewriteRule ^(.*)$ public/$1 [L,QSA]
