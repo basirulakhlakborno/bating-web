@@ -128,15 +128,34 @@ try {
 
 $mysqli->set_charset('utf8mb4');
 
+/**
+ * Run one statement at a time so errors name the failing SQL (our exports use one statement per line).
+ */
 try {
-    $mysqli->multi_query($sql);
-    do {
-        if ($result = $mysqli->store_result()) {
-            $result->free();
+    $lineNum = 0;
+    foreach (preg_split("/\r\n|\n|\r/", $sql) as $line) {
+        $lineNum++;
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '--')) {
+            continue;
         }
-    } while ($mysqli->more_results() && $mysqli->next_result());
+        if (! str_ends_with($line, ';')) {
+            fwrite(STDERR, "Import failed at line {$lineNum}: expected a single-line statement ending with ';'.\n");
+            fwrite(STDERR, "If this file was hand-edited, merge long statements onto one line or extend tmp_import_sql.php.\n");
+            exit(1);
+        }
+        $statement = substr($line, 0, -1);
+        if (trim($statement) === '') {
+            continue;
+        }
+        $mysqli->query($statement);
+    }
 } catch (Throwable $e) {
     fwrite(STDERR, 'Import failed: '.$e->getMessage()."\n");
+    if (isset($statement)) {
+        $preview = strlen($statement) > 280 ? substr($statement, 0, 280).'…' : $statement;
+        fwrite(STDERR, "Failed statement (line {$lineNum}): {$preview}\n");
+    }
     exit(1);
 }
 
