@@ -12,6 +12,8 @@
  *   # import.sql  (same directory as artisan — project root)
  *   php scripts/tmp_import_sql.php
  *   php scripts/tmp_import_sql.php /path/to/dump.sql
+ *   php scripts/tmp_import_sql.php database/exports/sqlite_export_for_mysql.sql
+ *   php scripts/import_sqlite_export_to_mysql.php   # same as line above (+ optional --with-migrate)
  *   php scripts/tmp_import_sql.php --with-migrate   # migrate --force, then import
  *
  * Full mysqldump (with DROP/CREATE): import usually replaces migrations — do not use --with-migrate.
