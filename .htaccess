@@ -24,8 +24,10 @@ DirectoryIndex index.php index.html
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
-    # Aviator game sub-app has its own Laravel instance; let its own .htaccess handle routing
-    RewriteRule ^games/avitorjetx/ - [L]
+    # Aviator game sub-app: route dynamic requests through its own Laravel front controller.
+    # Static files are already served by the -f rule above.
+    RewriteCond %{REQUEST_URI} ^/games/avitorjetx/
+    RewriteRule ^games/avitorjetx/(.*)$ games/avitorjetx/index.php [L,QSA]
 
     # Map / and /path → public/ (front controller, assets, public/storage)
     RewriteRule ^(.*)$ public/$1 [L,QSA]
